@@ -34,6 +34,13 @@ dependencies:
     sdk: flutter
   intl: ^0.20.2
   dio: ^5.3.0
+  liquid_glass_ui_design: ^1.0.5
+  flutter_glass_morphism: ^1.0.0
+  liquid_glass_effect: ^1.0.1
+  flutter_launcher_icons: ^0.14.1
+  mobile_scanner: ^3.5.5
+  shared_preferences: ^2.2.2
+  flutter_secure_storage: ^9.0.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -94,3 +101,7 @@ flutter:
   # see https://flutter.dev/to/font-from-package
 flutter_intl:
   enabled: true
+
+flutter_launcher_icons:
+  android: true
+  image_path: "assets/icon/icon.png"

@@ -1,3 +1,11 @@
 {
-  "sessions": "Sessions"
+  "sessions": "Sessions",
+  "medicines": "Medicines",
+  "mark": "Mark",
+  "noshow": "No-show",
+  "cancel": "Cancel",
+  "qrcode": "QR-code",
+  "emptySessions": "Sessions is empty",
+  "emptyMedicines": "Medicines list is empty",
+  "error": "Error"
 }

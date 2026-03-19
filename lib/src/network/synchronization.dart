@@ -12,4 +12,11 @@ class Synchronization {
     var list = a.whereType<Map<String, dynamic>>().toList();
     return list;
   }
+
+  Future<List<Map<String, dynamic>>> getMedicines() async {
+    Map<String, dynamic> selection = {"НачалоПериода": "2026-02-12T00:00:00", "КонецПериода": "2026-02-28T00:00:00"};
+    List<dynamic> a = await KintApi().post("Медикаменты", {}, selection);
+    var list = a.whereType<Map<String, dynamic>>().toList();
+    return list;
+  }
 }

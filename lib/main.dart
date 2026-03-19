@@ -1,6 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:medical_assistant/src/features/login/login_screen.dart';
 import 'package:medical_assistant/src/features/session_list/sessions_screen.dart';
-import 'dart:ui' as ui;
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:medical_assistant/src/network/kint_api_exception.dart';
 import 'generated/l10n.dart';
@@ -12,9 +13,7 @@ void main() {
 
 // Обработка ошибок
 void errorHandler(dynamic error) {
-  if (error is KintApiException){
-    
-  }
+  if (error is KintApiException) {}
 }
 
 // Создание приложения
@@ -29,11 +28,12 @@ class MyApp extends StatelessWidget {
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
       ],
-      title: "Сеансы",
+      supportedLocales: const [Locale("en"), Locale("ru")],
+      locale: PlatformDispatcher.instance.locale,
+      title: "null",
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: SessionsScreen()
+      //home: SessionsScreen(),
+      home: LoginScreen()
     );
   }
 }
-
-

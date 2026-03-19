@@ -1,27 +1,46 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:medical_assistant/src/data/auth_data_manager.dart';
 import 'package:medical_assistant/src/network/kint_api_exception.dart';
 
+// Работа с http-сервисом KintApi
 class KintApi {
   late String username;
   late String password;
   late String auth;
   late String server;
 
-  String service = "/kus/hs/KintAPI.hs/GetData";
+  String service = "/hs/KintAPI.hs/GetData";
 
   late Dio connection;
+  bool connectionCreated = false;
 
+  // Установка параметров соединения с авторизацией из настроек. Установка происходит при вызове метода API.
   KintApi(){
-    username = 'Дударев Григорий';
-    password = '';
-    auth = 'Basic ${base64Encode(utf8.encode('$username:$password'))}';
-    server = "http://192.168.31.125";
-    //server = "http://10.236.3.110";
+
+  }
+
+  // Установка параметров соединение по параметру
+  KintApi.withAuthData(AuthDataManager auth){
+    createConnectionWithAuth(auth);
+  }
+
+  // Заполнение данных авторизации и создание соединения
+  void createConnectionWithAuth(AuthDataManager auth){
+    username = auth.user!;
+    password = auth.password!;
+    server = auth.publication!;
+    setAuth();
     createConnection();
   }
 
+  // Установка переменной для заголовка авторизации запроса
+  void setAuth() {
+    auth = 'Basic ${base64Encode(utf8.encode('$username:$password'))}';
+  }
+
+  // Создание соединения с сервером
   void createConnection(){
     connection = Dio(BaseOptions(
         baseUrl: server,
@@ -34,18 +53,25 @@ class KintApi {
           'Authorization': auth
         }
     ));
+
+    connectionCreated = true;
   }
 
+  // Отправка запроса в сервис.
   dynamic send(String method, [Map<String, dynamic> params = const {}, bool post = false, dynamic data]) async {
+    if (!connectionCreated) {
+      createConnectionWithAuth(await AuthDataManager.getAuthData());
+    }
+
     Map<String, dynamic> result = {};
-    params["Method"] = method;
+    Map<String, dynamic> allParams = (<String, dynamic>{"Method": method})..addAll(params);
 
     try {
       dynamic response;
       if (post) {
-        response = await connection.post(service, queryParameters: params, data: data);
+        response = await connection.post(service, queryParameters: allParams, data: data);
       } else {
-        response = await connection.get(service, queryParameters: params);
+        response = await connection.get(service, queryParameters: allParams);
       }
 
       if (response.statusCode == 200) {
@@ -68,13 +94,19 @@ class KintApi {
       throw KintApiException(code: 0, error: error.toString());
     }
 
-    return jsonDecode(result['Result']);
+    if (result['Result'] is String) {
+      return jsonDecode(result['Result']);
+    }
+
+    return result['Result'];
   }
 
+  // Отправить GET-запрос.
   dynamic get(String method, [Map<String, dynamic> params = const {}]) async {
     return await send(method, params);
   }
 
+  // Отправить POST-запрос.
   dynamic post(String method, [Map<String, dynamic> params = const {}, dynamic data]) async {
     return await send(method, params, true, data);
   }
