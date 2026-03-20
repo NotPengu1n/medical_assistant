@@ -7,5 +7,6 @@
   "qrcode": "QR-код",
   "emptySessions": "Нет сеансов",
   "emptyMedicines": "Нет назначений медикаментов",
-  "error": "Ошибка"
+  "error": "Ошибка",
+  "appName": "Кинт: Медсестра"
 }

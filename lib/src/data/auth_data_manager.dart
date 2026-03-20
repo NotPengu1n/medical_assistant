@@ -16,10 +16,15 @@ class AuthDataManager {
 
   // Сохранение данных авторизации
   static Future<void> saveAuthData(String _publication, String _user, String _password) async {
+    AuthDataManager.withParams(_publication, _user, _password).save();
+  }
+
+  // Сохранение данных авторизации
+  Future<void> save() async {
     final storage = FlutterSecureStorage();
-    await storage.write(key: 'publication', value: _publication);
-    await storage.write(key: 'user', value: _user);
-    await storage.write(key: 'password', value: _password);
+    await storage.write(key: 'publication', value: publication);
+    await storage.write(key: 'user', value: user);
+    await storage.write(key: 'password', value: password);
   }
 
   // Получение данных авторизации

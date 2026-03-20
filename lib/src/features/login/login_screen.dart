@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:medical_assistant/src/data/auth_data_manager.dart';
 import 'package:medical_assistant/src/features/login/authorization.dart';
+import 'package:medical_assistant/src/features/session_list/sessions_screen.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -18,6 +19,18 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool _isPasswordVisible = false;
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    initializeFields();
+  }
+
+  void initializeFields() async {
+    AuthDataManager auth = await AuthDataManager.getAuthData();
+    _publicationController.text = auth.publication ?? "";
+    _usernameController.text = auth.user ?? "";
+  }
 
   @override
   void dispose() {
@@ -111,6 +124,7 @@ class _LoginScreenState extends State<LoginScreen> {
       SnackBar(
         content: Text(text),
         backgroundColor: (isError ? Colors.red : Colors.green),
+        duration: Duration(seconds: 10),
       ),
     );
   }
@@ -129,35 +143,27 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     AuthDataManager auth = AuthDataManager.withParams(_publicationController.text, _usernameController.text, _passwordController.text);
-    await Authorization.checkAuthorization(auth);
 
-    if (mounted) {
+    try {
+      await Authorization.checkAuthorization(auth);
+    }
+    catch (error) {
+      showMessage("Не удалось подключиться: " + error.toString(), isError: true);
       setState(() {
         _isLoading = false;
       });
-
-      _showLoginDialog(
-        'Вход выполнен',
-        'URL: ${_publicationController.text}\n'
-            'Пользователь: ${_usernameController.text}',
-      );
+      return;
     }
-  }
 
-  void _showLoginDialog(String title, String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
+    setState(() {
+      _isLoading = false;
+    });
+
+    showMessage("Успешная авторизация");
+
+    auth.save(); // Сохранение данных авторизации
+
+    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => SessionsScreen()));
   }
 
   @override

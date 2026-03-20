@@ -31,9 +31,9 @@ class BottomMenu extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            medicinesButton(context),
+            //medicinesButton(context),
             qrcodeButton(context),
-            sessionsButton(context),
+            //sessionsButton(context),
           ],
         ),
       ),

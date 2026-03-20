@@ -7,5 +7,6 @@
   "qrcode": "QR-code",
   "emptySessions": "Sessions is empty",
   "emptyMedicines": "Medicines list is empty",
-  "error": "Error"
+  "error": "Error",
+  "appName": "Kint: Medical assistant"
 }

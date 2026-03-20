@@ -66,12 +66,19 @@ class KintApi {
     Map<String, dynamic> result = {};
     Map<String, dynamic> allParams = (<String, dynamic>{"Method": method})..addAll(params);
 
+    Options options = Options(
+      contentType: 'application/json', // Явно указываем тип
+      headers: {
+        'Accept': 'application/json',
+      },
+    );
+
     try {
       dynamic response;
       if (post) {
-        response = await connection.post(service, queryParameters: allParams, data: data);
+        response = await connection.post(service, queryParameters: allParams, data: data, options: options);
       } else {
-        response = await connection.get(service, queryParameters: allParams);
+        response = await connection.get(service, queryParameters: allParams, options: options);
       }
 
       if (response.statusCode == 200) {
@@ -82,14 +89,15 @@ class KintApi {
       }
 
       if (result["Success"] == false) {
+        dynamic errorCode = (result['Result'] as Map<String, dynamic>?)?['КодОшибки'];
         throw KintApiException(
-            code: (result['Result'] as Map<String, dynamic>?)?['КодОшибки'],
+            code: (errorCode is int ? errorCode : 0),
             error: (result['Result'] as Map<String, dynamic>?)?['Error']
         );
       }
 
     } on DioException catch (error) {
-      throw KintApiException(code: 0, error: error.toString());
+      throw KintApiException(code: error.response?.statusCode ?? 0, error: error.toString());
     } catch (error) {
       throw KintApiException(code: 0, error: error.toString());
     }
