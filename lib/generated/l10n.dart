@@ -18,10 +18,8 @@ class S {
   static S? _current;
 
   static S get current {
-    assert(
-      _current != null,
-      'No instance of S was loaded. Try to initialize the S delegate before accessing S.current.',
-    );
+    assert(_current != null,
+        'No instance of S was loaded. Try to initialize the S delegate before accessing S.current.');
     return _current!;
   }
 
@@ -43,10 +41,8 @@ class S {
 
   static S of(BuildContext context) {
     final instance = S.maybeOf(context);
-    assert(
-      instance != null,
-      'No instance of S present in the widget tree. Did you add S.delegate in localizationsDelegates?',
-    );
+    assert(instance != null,
+        'No instance of S present in the widget tree. Did you add S.delegate in localizationsDelegates?');
     return instance!;
   }
 
@@ -56,32 +52,62 @@ class S {
 
   /// `Sessions`
   String get sessions {
-    return Intl.message('Sessions', name: 'sessions', desc: '', args: []);
+    return Intl.message(
+      'Sessions',
+      name: 'sessions',
+      desc: '',
+      args: [],
+    );
   }
 
   /// `Medicines`
   String get medicines {
-    return Intl.message('Medicines', name: 'medicines', desc: '', args: []);
+    return Intl.message(
+      'Medicines',
+      name: 'medicines',
+      desc: '',
+      args: [],
+    );
   }
 
   /// `Mark`
   String get mark {
-    return Intl.message('Mark', name: 'mark', desc: '', args: []);
+    return Intl.message(
+      'Mark',
+      name: 'mark',
+      desc: '',
+      args: [],
+    );
   }
 
   /// `No-show`
   String get noshow {
-    return Intl.message('No-show', name: 'noshow', desc: '', args: []);
+    return Intl.message(
+      'No-show',
+      name: 'noshow',
+      desc: '',
+      args: [],
+    );
   }
 
   /// `Cancel`
   String get cancel {
-    return Intl.message('Cancel', name: 'cancel', desc: '', args: []);
+    return Intl.message(
+      'Cancel',
+      name: 'cancel',
+      desc: '',
+      args: [],
+    );
   }
 
   /// `QR-code`
   String get qrcode {
-    return Intl.message('QR-code', name: 'qrcode', desc: '', args: []);
+    return Intl.message(
+      'QR-code',
+      name: 'qrcode',
+      desc: '',
+      args: [],
+    );
   }
 
   /// `Sessions is empty`
@@ -106,7 +132,12 @@ class S {
 
   /// `Error`
   String get error {
-    return Intl.message('Error', name: 'error', desc: '', args: []);
+    return Intl.message(
+      'Error',
+      name: 'error',
+      desc: '',
+      args: [],
+    );
   }
 
   /// `Kint: Medical assistant`
@@ -114,6 +145,16 @@ class S {
     return Intl.message(
       'Kint: Medical assistant',
       name: 'appName',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Choose`
+  String get choose {
+    return Intl.message(
+      'Choose',
+      name: 'choose',
       desc: '',
       args: [],
     );

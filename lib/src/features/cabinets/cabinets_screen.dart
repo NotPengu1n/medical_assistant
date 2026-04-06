@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:medical_assistant/generated/l10n.dart';
+import 'package:medical_assistant/l10n/app_localizations.dart';
 import 'package:medical_assistant/src/app/app_navigation.dart';
 import 'package:medical_assistant/src/features/cabinets/cabinet.dart';
 import 'package:medical_assistant/src/features/cabinets/cabinets_data.dart';
-import 'package:medical_assistant/src/app/splash_screen.dart';
-import 'package:medical_assistant/src/features/session_list/sessions_screen.dart';
 
 // Форма выбора кабинетов
 class CabinetsScreen extends StatefulWidget {
@@ -54,7 +52,7 @@ class _CabinetsScreen extends State<CabinetsScreen> {
                   Icon(Icons.error_outline, size: 48, color: Colors.red.shade300),
                   const SizedBox(height: 16),
                   Text(
-                    S.of(context).error,
+                    AppLocalizations.of(context)!.error,
                     style: TextStyle(fontSize: 18, color: Colors.grey.shade700),
                   ),
                   Text(

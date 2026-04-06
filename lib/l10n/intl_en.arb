@@ -1,4 +1,5 @@
 {
+  "@@locale": "en",
   "sessions": "Sessions",
   "medicines": "Medicines",
   "mark": "Mark",
@@ -8,5 +9,6 @@
   "emptySessions": "Sessions is empty",
   "emptyMedicines": "Medicines list is empty",
   "error": "Error",
-  "appName": "Kint: Medical assistant"
+  "appName": "Kint: Medical assistant",
+  "choose": "Choose"
 }

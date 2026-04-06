@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:medical_assistant/src/app/splash_screen.dart';
 import 'package:medical_assistant/src/data/auth_data_manager.dart';
+import 'package:medical_assistant/src/features/cabinets/cabinets_screen.dart';
 import 'package:medical_assistant/src/features/login/authorization.dart';
 import 'package:medical_assistant/src/features/session_list/sessions_screen.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -163,7 +165,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
     auth.save(); // Сохранение данных авторизации
 
-    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => SessionsScreen()));
+    // TODO: здесь надо открывать форму общей функцией. Скорее всего надо использовать SplashScreen(), т.к. там общий код
+    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => CabinetsScreen()));
   }
 
   @override

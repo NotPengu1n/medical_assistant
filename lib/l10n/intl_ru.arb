@@ -1,12 +1,14 @@
 {
+  "@@locale": "ru",
   "sessions": "Сеансы",
   "medicines": "Медикаменты",
-  "mark": "Отметить",
+  "mark": "Оказано",
   "noshow": "Неявка",
   "cancel": "Отмена",
   "qrcode": "QR-код",
   "emptySessions": "Нет сеансов",
   "emptyMedicines": "Нет назначений медикаментов",
   "error": "Ошибка",
-  "appName": "Кинт: Медсестра"
+  "appName": "Кинт: Медсестра",
+  "choose": "Выбрать"
 }

@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 class SpriteIcon extends StatefulWidget {
   final int index;
   final double size;
+  final double widgetSize;
   final String image;
 
   const SpriteIcon({
@@ -17,6 +18,7 @@ class SpriteIcon extends StatefulWidget {
     required this.index, // Номер картинки в коллекции
     this.size = 16, // Размер картинки в коллекции
     required this.image, // Имя файла в каталоге assets/images/
+    this.widgetSize = 16
   });
 
   @override
@@ -91,12 +93,12 @@ class _SpriteIconState extends State<SpriteIcon> {
     }
 
     return CustomPaint(
-      size: Size(widget.size, widget.size),
+      size: Size(widget.widgetSize, widget.widgetSize),
       painter: _SpritePainter(
         image: _image!,
         index: widget.index,
-        spriteWidth: 16,
-        spriteHeight: 16,
+        spriteWidth: widget.size,
+        spriteHeight: widget.size,
       ),
     );
   }
@@ -134,8 +136,8 @@ class _SpritePainter extends CustomPainter {
         size.height,
       );
 
-      final paint = Paint()
-        ..filterQuality = FilterQuality.low;
+      //final paint = Paint()..filterQuality = FilterQuality.low;
+      final paint = Paint()..filterQuality = FilterQuality.none;
 
       canvas.drawImageRect(image, sourceRect, destRect, paint);
     } catch (e) {

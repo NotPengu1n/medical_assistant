@@ -1,7 +1,7 @@
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:medical_assistant/generated/l10n.dart';
+import 'package:medical_assistant/l10n/app_localizations.dart';
 import 'package:medical_assistant/src/features/medicines_list/medicine_card.dart';
 import 'package:medical_assistant/src/features/menu/BottomMenu.dart';
 import 'package:medical_assistant/src/network/synchronization.dart';
@@ -25,13 +25,13 @@ class _MedicinesScreen extends State<MedicinesScreen> {
         }
 
         if (snapshot.hasError) {
-          return Center(child: Text('${S.of(context).error}: ${snapshot.error}'));
+          return Center(child: Text('${AppLocalizations.of(context)!.error}: ${snapshot.error}'));
         }
 
         final data = snapshot.data ?? [];
 
         if (data.isEmpty) {
-          return Center(child: Text(S.of(context).emptyMedicines));
+          return Center(child: Text(AppLocalizations.of(context)!.emptyMedicines));
         }
 
         return ListView.builder(
@@ -48,7 +48,7 @@ class _MedicinesScreen extends State<MedicinesScreen> {
       backgroundColor: Color.fromRGBO(232, 232, 232, 1),
       appBar: AppBar(
         backgroundColor: Color.fromRGBO(0, 191, 255, 1),
-        title: Text(S.of(context).medicines, style: TextStyle(color: Colors.white)),
+        title: Text(AppLocalizations.of(context)!.medicines, style: TextStyle(color: Colors.white)),
         centerTitle: true,
       ),
       body: BodyList(),

@@ -8,6 +8,7 @@ class AppNavigation {
   static const String cabinetsName = "/cabinets";
   static const String loginName = "/login";
   static const String splashName = "/splash";
+  static const String renderedServicesName = "/renderedServices";
 
   static void replaceScreen(Widget screen, BuildContext context) {
     try {
@@ -17,6 +18,10 @@ class AppNavigation {
     } catch (error){
       print(error);
     }
+  }
+
+  static void _openScreen(String screenName, BuildContext context) {
+    Navigator.of(context).pushNamed(screenName);
   }
 
   static void _replaceScreen(String screenName, BuildContext context) {
@@ -29,5 +34,9 @@ class AppNavigation {
 
   static void openCabinets(BuildContext context) {
     _replaceScreen(cabinetsName, context);
+  }
+
+  static void openRenderedServices(BuildContext context) {
+    _openScreen(renderedServicesName, context);
   }
 }

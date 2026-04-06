@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:medical_assistant/generated/l10n.dart';
+import 'package:medical_assistant/l10n/app_localizations.dart';
 import 'package:medical_assistant/src/features/cabinets/cabinets_data.dart';
 import 'package:medical_assistant/src/features/cabinets/cabinets_screen.dart';
 import 'package:medical_assistant/src/features/login/authorization.dart';
@@ -51,7 +51,7 @@ class _SplashScreenState extends State<SplashScreen> {
         if (snapshot.hasData) {
           final isAuthorized = snapshot.data ?? false;
 
-          if (isAuthorized && !(hasSelectedCabinets ?? true)) {
+          if (isAuthorized && !(hasSelectedCabinets ?? false)) {
             return CabinetsScreen();
           }
 
@@ -105,7 +105,7 @@ class _SplashScreenState extends State<SplashScreen> {
               const SizedBox(height: 24),
 
               Text(
-                S.of(context).appName,
+                AppLocalizations.of(context)!.appName,
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 24,

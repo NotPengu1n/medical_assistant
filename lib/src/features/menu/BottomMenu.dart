@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:medical_assistant/generated/l10n.dart';
+import 'package:medical_assistant/l10n/app_localizations.dart';
 import 'package:medical_assistant/src/features/medicines_list/medicines_screen.dart';
 
 class BottomMenu extends StatelessWidget {
@@ -42,17 +42,17 @@ class BottomMenu extends StatelessWidget {
 
   // Кнопка открытия списка медикаментов.
   Widget medicinesButton(BuildContext context) {
-    return menuIcon(context, Icons.medication, S.of(context).medicines);
+    return menuIcon(context, Icons.medication, AppLocalizations.of(context)!.medicines);
   }
 
   // Кнопка открытия QR-кода для отметки пациента.
   Widget qrcodeButton(BuildContext context) {
-    return menuIcon(context, Icons.qr_code_2_rounded, S.of(context).qrcode);
+    return menuIcon(context, Icons.qr_code_2_rounded, AppLocalizations.of(context)!.qrcode);
   }
 
   // Кнопка открытия списка сеансов.
   Widget sessionsButton(BuildContext context) {
-    return menuIcon(context, Icons.healing, S.of(context).sessions);
+    return menuIcon(context, Icons.healing, AppLocalizations.of(context)!.sessions);
   }
 
   Widget menuIcon(BuildContext context, IconData icon, String text) {

@@ -22,17 +22,17 @@ class MessageLookup extends MessageLookupByLibrary {
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
-    "appName": MessageLookupByLibrary.simpleMessage("Кинт: Медсестра"),
-    "cancel": MessageLookupByLibrary.simpleMessage("Отмена"),
-    "emptyMedicines": MessageLookupByLibrary.simpleMessage(
-      "Нет назначений медикаментов",
-    ),
-    "emptySessions": MessageLookupByLibrary.simpleMessage("Нет сеансов"),
-    "error": MessageLookupByLibrary.simpleMessage("Ошибка"),
-    "mark": MessageLookupByLibrary.simpleMessage("Отметить"),
-    "medicines": MessageLookupByLibrary.simpleMessage("Медикаменты"),
-    "noshow": MessageLookupByLibrary.simpleMessage("Неявка"),
-    "qrcode": MessageLookupByLibrary.simpleMessage("QR-код"),
-    "sessions": MessageLookupByLibrary.simpleMessage("Сеансы"),
-  };
+        "appName": MessageLookupByLibrary.simpleMessage("Кинт: Медсестра"),
+        "cancel": MessageLookupByLibrary.simpleMessage("Отмена"),
+        "choose": MessageLookupByLibrary.simpleMessage("Выбрать"),
+        "emptyMedicines":
+            MessageLookupByLibrary.simpleMessage("Нет назначений медикаментов"),
+        "emptySessions": MessageLookupByLibrary.simpleMessage("Нет сеансов"),
+        "error": MessageLookupByLibrary.simpleMessage("Ошибка"),
+        "mark": MessageLookupByLibrary.simpleMessage("Оказано"),
+        "medicines": MessageLookupByLibrary.simpleMessage("Медикаменты"),
+        "noshow": MessageLookupByLibrary.simpleMessage("Неявка"),
+        "qrcode": MessageLookupByLibrary.simpleMessage("QR-код"),
+        "sessions": MessageLookupByLibrary.simpleMessage("Сеансы")
+      };
 }
