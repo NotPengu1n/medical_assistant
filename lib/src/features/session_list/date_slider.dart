@@ -1,8 +1,10 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_lucide/flutter_lucide.dart';
 import 'package:medical_assistant/l10n/app_localizations.dart';
 import 'package:medical_assistant/src/core/extended_date_time/ext_date_time.dart';
+import 'package:medical_assistant/ui_kit/ui_kit.dart';
 
 class DateSlider extends StatefulWidget {
   final Function(DateTime)? onDateSelected;
@@ -155,7 +157,7 @@ class _DateSliderState extends State<DateSlider> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                Icons.calendar_month_sharp,
+                LucideIcons.calendar_1,
                 size: 18,
                 color: isSelected ? Colors.white70 : Colors.grey.shade600,
               ),
@@ -181,10 +183,10 @@ class _DateSliderState extends State<DateSlider> {
   // Оформление блока с выбором даты
   static BoxDecoration cardDecoration(bool isSelected) {
     return BoxDecoration(
-      color: isSelected ? Colors.blue : Colors.white,
+      color: isSelected ? AppT.c.primary : Colors.white,
       borderRadius: BorderRadius.circular(12),
       border: Border.all(
-        color: isSelected ? Colors.blue : Colors.grey.shade300,
+        color: isSelected ? AppT.c.primary : Colors.grey.shade300,
         width: 1,
       ),
       boxShadow: isSelected

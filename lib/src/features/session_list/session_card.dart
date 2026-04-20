@@ -6,11 +6,14 @@ import 'package:medical_assistant/src/core/extended_date_time/ext_date_time.dart
 import 'package:medical_assistant/src/core/extended_string/ext_string.dart';
 import 'package:medical_assistant/src/core/sprite_icon/sprite_icon.dart';
 import 'package:medical_assistant/src/network/synchronization.dart';
+import 'package:medical_assistant/ui_kit/ui_kit.dart';
 
 class SessionCard extends StatefulWidget {
   final Map session;
+  bool isVisible = true;
+  final VoidCallback refreshParent;
 
-  SessionCard({super.key, required this.session}) {
+  SessionCard({super.key, required this.session, required this.refreshParent}) {
     session["Дата"] = session["ДатаСеанса"];
     session["Исполнитель"] = null;
     session["фПлатная"] = session["Платная"];
@@ -23,12 +26,13 @@ class SessionCard extends StatefulWidget {
 class _SessionCardState extends State<SessionCard> {
   bool isPassed = false;
   bool isNoShow = false;
-  bool isVisible = true;
   bool isFutureSession = false;
   bool isPaid = false;
   bool hasBeenPaid = false;
   int seatsNumber = 0;
   bool isDisclosureVisible = false;
+  final borderRadius = BorderRadius.circular(AppT.r.lg);
+  final paddingCard = EdgeInsets.symmetric(horizontal: AppT.r.lg, vertical: AppT.r.lg / 2);
 
   int iconPriorityId = 0;
   String priority = "";
@@ -36,7 +40,10 @@ class _SessionCardState extends State<SessionCard> {
   @override
   void initState() {
     super.initState();
+  }
 
+  // Инициализация переменных класса
+  void initializeVariables() {
     DateTime sessionDate = DateTime.parse(widget.session["ДатаСеанса"]);
 
     isPassed = widget.session["isPassed"];
@@ -55,82 +62,83 @@ class _SessionCardState extends State<SessionCard> {
 
   @override
   Widget build(BuildContext context) {
-    final borderRadius = BorderRadius.circular(16);
+    initializeVariables();
 
     return Visibility(
-      visible: isVisible,
+      key: ValueKey(widget.session["id"]),
+      visible: widget.isVisible,
       child: Container(
         margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
         decoration: cardDecoration(),
         child: ClipRRect(
           borderRadius: borderRadius,
-          child: swipeBody(context, borderRadius), // TODO: удалить переменную borderRadius
+          child: swipeBody(context), // TODO: удалить переменную borderRadius
         ),
       ),
     );
   }
 
   // Тело сеанса, которое можно свайпать
-  Widget swipeBody(BuildContext context, BorderRadius borderRadius) {
+  Widget swipeBody(BuildContext context) {
     return Dismissible(
       key: ValueKey(widget.session["id"]),
       direction: DismissDirection.horizontal,
 
+      confirmDismiss: (direction) async {
+        return true;
+      },
+
       onDismissed: (direction) {
         if (direction == DismissDirection.endToStart) {
-          // свайп влево "Отметить"
-          setState(() {
-            isVisible = false;
-          });
+          markSession(); // Влево - оказываем услугу
         } else if (direction == DismissDirection.startToEnd) {
-          // свайп вправо "Неявка"
-          setState(() {
-            isVisible = false;
-          });
+          cancelSession(); // Вправо - неявка на услугу
         }
       },
 
-      background: ClipRRect(
+      background: _buildDismissBackground(
         borderRadius: borderRadius,
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.red,
-            borderRadius: borderRadius,
-          ),
-          alignment: Alignment.centerLeft,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            AppLocalizations.of(context)!.noshow,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
+        color: AppT.c.error,
+        alignment: Alignment.centerLeft,
+        text: AppLocalizations.of(context)!.noshow,
       ),
 
-      secondaryBackground: ClipRRect(
+      secondaryBackground: _buildDismissBackground(
         borderRadius: borderRadius,
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.blue,
-            borderRadius: borderRadius,
-          ),
-          alignment: Alignment.centerRight,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            AppLocalizations.of(context)!.mark,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
+        color: AppT.c.primary,
+        alignment: Alignment.centerRight,
+        text: AppLocalizations.of(context)!.mark,
       ),
 
       child: sessionBody(context, borderRadius),
+    );
+  }
+
+  // Фон свайпера
+  Widget _buildDismissBackground({
+    required BorderRadius borderRadius,
+    required Color color,
+    required Alignment alignment,
+    required String text,
+  }) {
+    return ClipRRect(
+      borderRadius: borderRadius,
+      child: Container(
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: borderRadius,
+        ),
+        alignment: alignment,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Text(
+          text,
+          style: TextStyle(
+            color: AppT.c.surface,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
     );
   }
 
@@ -170,7 +178,7 @@ class _SessionCardState extends State<SessionCard> {
   // Основная информация по сеансу
   Widget mainInfo() {
     return Container(
-        padding: const EdgeInsets.all(12),
+        padding: paddingCard,
         decoration: mainInfoDecoration(),
         child: IntrinsicHeight(child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -185,7 +193,7 @@ class _SessionCardState extends State<SessionCard> {
                     children: [
                       timeBox(),
                       const SizedBox(width: 5),
-                      serviceBox()
+                      Expanded(child: serviceBox())
                     ],
                   ),
                 ],
@@ -208,7 +216,7 @@ class _SessionCardState extends State<SessionCard> {
   // Дополнительная информация по сеансу
   Widget disclosureInfo(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: paddingCard,
       decoration: disclosureInfoDecoration(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -218,11 +226,13 @@ class _SessionCardState extends State<SessionCard> {
             children: [
               if (isPaid) ...[paidInfoWidget()],
               if (seatsNumber > 1) ...[seatsNumberWidget(context)],
-              if (iconPriorityId > 0) ...[Row(children: [iconPriority(), const SizedBox(width: 6), Text(priority)])],
+              if (iconPriorityId > 0) ...[Row(children: [iconPriority(), const SizedBox(width: 6), Text(priority, style: TextStyle(color: AppT.c.textSecondary),)])],
             ],
           ),
 
           locationWidget(context),
+
+          ...commentBox(),
 
           sessionButtons(context),
         ],
@@ -241,11 +251,11 @@ class _SessionCardState extends State<SessionCard> {
   Widget seatsNumberWidget(BuildContext context) {
     return Row(
       children: [
-        Icon(Icons.event_seat_outlined, size: 16, color: Colors.grey[600]),
+        Icon(Icons.event_seat_outlined, size: 16, color: AppT.c.textSecondary),
         const SizedBox(width: 6),
         Text(
           '$seatsNumber ' + "".pluralForm(seatsNumber, "место", "места", "мест"),
-          style: TextStyle(fontSize: 13, color: Colors.grey[800]),
+          style: TextStyle(fontSize: 13, color: AppT.c.textSecondary),
         ),
       ],
     );
@@ -255,12 +265,12 @@ class _SessionCardState extends State<SessionCard> {
   Widget locationWidget(BuildContext context) {
     return Row(
       children: [
-        Icon(Icons.meeting_room_outlined, size: 16, color: Colors.grey[600]),
+        Icon(Icons.meeting_room_outlined, size: 16, color: AppT.c.textSecondary),
         const SizedBox(width: 6),
         Expanded(
           child: Text(
             getLocationText(),
-            style: TextStyle(fontSize: 13, color: Colors.grey[800]),
+            style: TextStyle(fontSize: 13, color: AppT.c.textSecondary),
           ),
         ),
       ],
@@ -283,46 +293,71 @@ class _SessionCardState extends State<SessionCard> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        sessionButton(
-          context,
-          Colors.red.shade400,
-          AppLocalizations.of(context)!.noshow,
-          cancelSession,
-        ),
+        sessionButton(context, AppT.c.error, AppLocalizations.of(context)!.noshow, cancelSession),
         const SizedBox(width: 8),
-        sessionButton(context, Colors.blue, AppLocalizations.of(context)!.mark, markSession),
+        sessionButton(context, AppT.c.primary, AppLocalizations.of(context)!.mark, markSession),
       ],
     );
   }
 
-  // Обработчик команды отметки сеанса
-  Future<void> markSession() async {
-    bool result = await Synchronization.markSession(
-      widget.session,
-      false,
-      false,
-    );
-    if (result && mounted) {
-      setState(() {
-        isVisible = false;
-        widget.session["Пройдено"] = 1;
-      });
+  Future<bool> _handleSessionAction({required bool isCancel, required void Function() onSuccess}) async {
+    try {
+      // setState(() {
+      //   widget.isVisible = false;
+      // });
+
+      widget.session["ВременнаяВидимость"] = false;
+      widget.refreshParent();
+
+      final result = await Synchronization.markSession(widget.session, isCancel, false);
+
+      if (result && mounted) {
+        widget.session["ВременнаяВидимость"] = true; // Возвращаем флаг назад, т.к. флаг временный. После этого видимость определяется другими параметрами
+        setState(onSuccess);
+      }
+    } catch (error) {
+      // setState(() {
+      //   widget.isVisible = true;
+      // });
+      showMessage(error.toString(), isError: true);
+      widget.session["ВременнаяВидимость"] = true;
+      widget.refreshParent();
+      return false;
     }
+
+    return true;
+  }
+
+  // Обработчик команды отметки сеанса
+  Future<bool> markSession() async {
+    return _handleSessionAction(
+      isCancel: false,
+      onSuccess: () {
+        widget.session["Пройдено"] = 1;
+      },
+    );
   }
 
   // Обработчик команды неявки на сеанс
-  Future<void> cancelSession() async {
-    bool result = await Synchronization.markSession(
-      widget.session,
-      true,
-      false,
-    );
-    if (result && mounted) {
-      setState(() {
-        isVisible = false;
+  Future<bool> cancelSession() async {
+    return _handleSessionAction(
+      isCancel: true,
+      onSuccess: () {
         widget.session["Осталось"] = 0;
-      });
-    }
+      },
+    );
+  }
+
+  // TODO: вынести в общий модуль
+  void showMessage(String text, {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(text),
+        backgroundColor: (isError ? AppT.c.error : AppT.c.success),
+        duration: Duration(seconds: 10),
+        padding: EdgeInsets.only(bottom: 30),
+      ),
+    );
   }
 
   // Описание кнопки сеанса
@@ -331,10 +366,10 @@ class _SessionCardState extends State<SessionCard> {
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
         backgroundColor: color,
-        foregroundColor: Colors.white,
+        foregroundColor: AppT.c.surface,
         elevation: 0,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+        shape: RoundedRectangleBorder(borderRadius: borderRadius),
       ),
       child: Text(
         text,
@@ -351,9 +386,9 @@ class _SessionCardState extends State<SessionCard> {
       serviceName,
       style: TextStyle(
         fontWeight: FontWeight.w500,
-        color: Colors.grey.shade600,
+        color: AppT.c.textSecondary,
       ),
-      maxLines: 2,
+      maxLines: isDisclosureVisible ? 5 : 1,
       overflow: TextOverflow.ellipsis,
     );
   }
@@ -368,31 +403,38 @@ class _SessionCardState extends State<SessionCard> {
       children: [
         Text(
           patientName,
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 16,
-            color: Colors.black87,
+            color: AppT.c.textPrimary,
           ),
-          maxLines: 2,
+          maxLines: isDisclosureVisible ? 5 : 1,
           overflow: TextOverflow.ellipsis,
-        ),
-        if (widget.session["Комментарий"] != null &&
-            widget.session["Комментарий"].toString().isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(top: 2),
-            child: Text(
-              widget.session["Комментарий"],
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[600],
-                fontStyle: FontStyle.italic,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
+        )
       ],
     );
+  }
+
+  // Виджет комментарий
+  List<Widget> commentBox() {
+    String comment = widget.session["Комментарий"] ?? "";
+
+    if (comment.isNotEmpty)
+      return [
+        Padding(
+          padding: const EdgeInsets.only(top: 2),
+          child: Text(
+            comment,
+            style: TextStyle(
+              fontSize: 12,
+              color: AppT.c.textSecondary,
+              fontStyle: FontStyle.italic,
+            )
+          )
+        )
+      ];
+
+    return [];
   }
 
   // Время сеанса
@@ -407,7 +449,7 @@ class _SessionCardState extends State<SessionCard> {
       style: TextStyle(
         fontSize: 14,
         fontWeight: FontWeight.w500,
-        color: Colors.blue,
+        color: AppT.c.primary,
       ),
     );
   }
@@ -426,8 +468,8 @@ class _SessionCardState extends State<SessionCard> {
               fontSize: 13,
               fontWeight: hasBeenPaid ? FontWeight.w500 : FontWeight.normal,
               color: hasBeenPaid
-                  ? Colors.green.shade700
-                  : Colors.orange.shade700,
+                  ? AppT.c.success
+                  : AppT.c.error,
             ),
           ),
         ],
@@ -444,43 +486,43 @@ class _SessionCardState extends State<SessionCard> {
   Widget iconPaidInfo() {
     return Text(
       '₽',
-      style: TextStyle(fontSize: 16, color: (hasBeenPaid ? Colors.green.shade700 : Colors.orange.shade700)),
+      style: TextStyle(fontSize: 16, color: (hasBeenPaid ? AppT.c.success : AppT.c.error)),
     );
   }
 
   // Стиль оформления основной карточки
   BoxDecoration mainInfoDecoration() {
     return BoxDecoration(
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+      borderRadius: borderRadius
     );
   }
 
   // Стиль оформления дополнительной карточки
   BoxDecoration disclosureInfoDecoration() {
     return BoxDecoration(
-      color: Colors.grey.shade50,
-      border: Border(top: BorderSide(color: Colors.grey.shade200, width: 1)),
+      color: AppT.c.surface,
+      border: Border(top: BorderSide(color: AppT.c.mainActionBackground, width: 1)),
     );
   }
 
   // Стиль оформления всей карточки сеанса
   BoxDecoration cardDecoration() {
     return BoxDecoration(
-      borderRadius: BorderRadius.circular(16),
-      color: Colors.white,
+      borderRadius: borderRadius,
+      color: AppT.c.surface,
       boxShadow: [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.08),
-          blurRadius: 12,
-          offset: const Offset(0, 4),
-          spreadRadius: 0,
-        ),
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.05),
-          blurRadius: 4,
-          offset: const Offset(0, 2),
-          spreadRadius: 0,
-        ),
+        // BoxShadow(
+        //   color: AppT.c.textPrimary.withValues(alpha: 0.1),
+        //   blurRadius: 12,
+        //   offset: const Offset(0, 4),
+        //   spreadRadius: 0,
+        // ),
+        // BoxShadow(
+        //   color: AppT.c.textPrimary.withValues(alpha: 0.05),
+        //   blurRadius: 4,
+        //   offset: const Offset(0, 2),
+        //   spreadRadius: 0,
+        // ),
       ],
     );
   }

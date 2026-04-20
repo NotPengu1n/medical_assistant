@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_lucide/flutter_lucide.dart';
+import 'package:medical_assistant/l10n/app_localizations.dart';
+import 'package:medical_assistant/src/core/extended_date_time/ext_date_time.dart';
 import 'package:medical_assistant/src/network/synchronization.dart';
+import 'package:medical_assistant/ui_kit/ui_kit.dart';
 
 class ServicesReportPage extends StatefulWidget {
   const ServicesReportPage({super.key});
@@ -45,8 +49,8 @@ class _ServicesReportPageState extends State<ServicesReportPage> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Colors.blue,
+            colorScheme: ColorScheme.light(
+              primary: AppT.c.primary,
               onPrimary: Colors.white,
               surface: Colors.white,
             ),
@@ -59,16 +63,13 @@ class _ServicesReportPageState extends State<ServicesReportPage> {
     if (picked != null && picked != _selectedDateRange) {
       setState(() {
         _selectedDateRange = picked;
+        _fetchServicesData();
       });
     }
   }
 
   String _formatDateRange(DateTimeRange range) {
-    return '${_formatDate(range.start)} - ${_formatDate(range.end)}';
-  }
-
-  String _formatDate(DateTime date) {
-    return '${date.day}.${date.month}.${date.year}';
+    return '${range.start.strDayMonthYear()} - ${range.end.strDayMonthYear()}';
   }
 
   @override
@@ -80,13 +81,13 @@ class _ServicesReportPageState extends State<ServicesReportPage> {
           'Оказанные услуги',
           style: TextStyle(color: Colors.white),
         ),
-        backgroundColor: Colors.blue,
+        backgroundColor: AppT.c.primary,
         centerTitle: true,
         elevation: 2,
       ),
       body: Column(
         children: [
-          period(),
+          period(context),
 
           Container(
             margin: const EdgeInsets.all(12),
@@ -107,7 +108,7 @@ class _ServicesReportPageState extends State<ServicesReportPage> {
 
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator(color: Colors.blue))
+                ? Center(child: CircularProgressIndicator(color: AppT.c.primary))
                 : _servicesData.isEmpty
                 ? const Center(
               child: Text(
@@ -159,7 +160,7 @@ class _ServicesReportPageState extends State<ServicesReportPage> {
           child: DataTable(
             columnSpacing: 16,
             headingRowColor: WidgetStateProperty.resolveWith<Color?>(
-                  (states) => Colors.blue,
+                  (states) => AppT.c.primary,
             ),
             headingTextStyle: const TextStyle(
               color: Colors.white,
@@ -175,14 +176,15 @@ class _ServicesReportPageState extends State<ServicesReportPage> {
             rows: _servicesData.map((service) {
               final isPaid = service['фПлатная'] as bool;
               return DataRow(
-                color: WidgetStateProperty.resolveWith<Color?>(
-                      (states) => isPaid ? Colors.grey[50] : null,
-                ),
                 cells: [
-                  DataCell(Text(
-                    service['Услуга'],
-                    style: const TextStyle(color: Colors.black),
-                  )),
+                  DataCell(
+                      Row(
+                          children: [
+                            Text(service['Услуга'], style: const TextStyle(color: Colors.black),),
+                            if(isPaid) ...[SizedBox(width: 7), Text("₽", style: TextStyle(color: AppT.c.primary),)]
+                          ]
+                      )
+                  ),
                   DataCell(Text(
                     '${service['КоличествоСеансов']}',
                     style: const TextStyle(color: Colors.black),
@@ -210,7 +212,7 @@ class _ServicesReportPageState extends State<ServicesReportPage> {
   Widget _buildSummaryCard(String title, String value, IconData icon) {
     return Column(
       children: [
-        Icon(icon, color: Colors.blue, size: 24),
+        Icon(icon, color: AppT.c.primary, size: 24),
         const SizedBox(height: 8),
         Text(
           value,
@@ -232,20 +234,20 @@ class _ServicesReportPageState extends State<ServicesReportPage> {
   }
 
   // Виджет с периодом
-  Widget period() {
+  Widget period(BuildContext context) {
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          const Icon(Icons.date_range, color: Colors.blue),
+          Icon(LucideIcons.calendar_range, color: AppT.c.primary),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Период',
+                Text(
+                  AppLocalizations.of(context)!.period,
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey,
@@ -265,9 +267,9 @@ class _ServicesReportPageState extends State<ServicesReportPage> {
           ElevatedButton.icon(
             onPressed: () => _selectDateRange(context),
             icon: const Icon(Icons.edit_calendar, size: 18),
-            label: const Text('Выбрать'),
+            label: Text(AppLocalizations.of(context)!.choose),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
+              backgroundColor: AppT.c.primary,
               foregroundColor: Colors.white,
             ),
           ),

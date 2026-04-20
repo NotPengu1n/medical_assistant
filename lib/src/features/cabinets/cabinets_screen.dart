@@ -4,6 +4,7 @@ import 'package:medical_assistant/l10n/app_localizations.dart';
 import 'package:medical_assistant/src/app/app_navigation.dart';
 import 'package:medical_assistant/src/features/cabinets/cabinet.dart';
 import 'package:medical_assistant/src/features/cabinets/cabinets_data.dart';
+import 'package:medical_assistant/ui_kit/ui_kit.dart';
 
 // Форма выбора кабинетов
 class CabinetsScreen extends StatefulWidget {
@@ -27,9 +28,9 @@ class _CabinetsScreen extends State<CabinetsScreen> {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        backgroundColor: Colors.blue,
-        title: const Text(
-          'Укажите рабочие кабинеты',
+        backgroundColor: AppT.c.primary,
+        title: Text(
+          AppLocalizations.of(context)!.indicate_cabinets,
           style: TextStyle(color: Colors.white),
         ),
         centerTitle: true,
@@ -75,7 +76,7 @@ class _CabinetsScreen extends State<CabinetsScreen> {
                   Icon(Icons.meeting_room_outlined, size: 64, color: Colors.grey.shade400),
                   const SizedBox(height: 16),
                   Text(
-                    'Нет доступных кабинетов',
+                    AppLocalizations.of(context)!.no_cabinets,
                     style: TextStyle(fontSize: 18, color: Colors.grey.shade600),
                   ),
                 ],
@@ -88,7 +89,7 @@ class _CabinetsScreen extends State<CabinetsScreen> {
             builder: (context, Box<Cabinet> box, _) {
               return Column(
                 children: [
-                  _buildActionButtons(),
+                  _buildActionButtons(context),
                   Expanded(
                     child: ListView.builder(
                       padding: const EdgeInsets.all(16),
@@ -150,7 +151,7 @@ class _CabinetsScreen extends State<CabinetsScreen> {
             size: 20,
           ),
         ),
-        activeColor: Colors.blue,
+        activeColor: AppT.c.primary,
         checkColor: Colors.white,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         shape: RoundedRectangleBorder(
@@ -181,7 +182,7 @@ class _CabinetsScreen extends State<CabinetsScreen> {
             AppNavigation.openSessions(context);
           } : null,
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue,
+            backgroundColor: AppT.c.primary,
             foregroundColor: Colors.white,
             minimumSize: const Size(double.infinity, 50),
             shape: RoundedRectangleBorder(
@@ -201,7 +202,7 @@ class _CabinetsScreen extends State<CabinetsScreen> {
     );
   }
 
-  Widget _buildActionButtons() {
+  Widget _buildActionButtons(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Row(
@@ -210,7 +211,7 @@ class _CabinetsScreen extends State<CabinetsScreen> {
             child: ElevatedButton.icon(
               onPressed: _selectAll,
               icon: const Icon(Icons.check_box, size: 18),
-              label: const Text('Выбрать все'),
+              label: Text(AppLocalizations.of(context)!.choose_all),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue.shade50,
                 foregroundColor: Colors.blue.shade700,
@@ -224,7 +225,7 @@ class _CabinetsScreen extends State<CabinetsScreen> {
             child: ElevatedButton.icon(
               onPressed: _deselectAll,
               icon: const Icon(Icons.check_box_outline_blank, size: 18),
-              label: const Text('Снять все'),
+              label: Text(AppLocalizations.of(context)!.remove_all),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.grey.shade50,
                 foregroundColor: Colors.grey.shade700,

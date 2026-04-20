@@ -1,6 +1,12 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:medical_assistant/src/app/splash_screen.dart';
+import 'package:medical_assistant/src/features/cabinets/cabinets_screen.dart';
+import 'package:medical_assistant/src/features/login/login_screen.dart';
+import 'package:medical_assistant/src/features/rendered_services/rendered_services.dart';
+import 'package:medical_assistant/src/features/session_list/qr_screen.dart';
+import 'package:medical_assistant/src/features/session_list/sessions_screen.dart';
 
 // Проводник по экранам
 class AppNavigation {
@@ -9,6 +15,17 @@ class AppNavigation {
   static const String loginName = "/login";
   static const String splashName = "/splash";
   static const String renderedServicesName = "/renderedServices";
+  static const String qrName = "/qr";
+
+  static Map<String, WidgetBuilder> routes() {
+    return {
+      splashName : (context) => SplashScreen(),
+      loginName: (context) => LoginScreen(),
+      sessionName: (context) => SessionsScreen(),
+      cabinetsName: (context) => CabinetsScreen(),
+      renderedServicesName: (context) => ServicesReportPage(),
+    };
+  }
 
   static void replaceScreen(Widget screen, BuildContext context) {
     try {

@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:medical_assistant/src/app/splash_screen.dart';
+import 'package:medical_assistant/l10n/app_localizations.dart';
 import 'package:medical_assistant/src/data/auth_data_manager.dart';
 import 'package:medical_assistant/src/features/cabinets/cabinets_screen.dart';
 import 'package:medical_assistant/src/features/login/authorization.dart';
-import 'package:medical_assistant/src/features/session_list/sessions_screen.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:medical_assistant/ui_kit/ui_kit.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -58,8 +58,8 @@ class _LoginScreenState extends State<LoginScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Сканируйте QR-код',
+                  Text(
+                    AppLocalizations.of(context)!.scan_qrcode,
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   IconButton(
@@ -78,7 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       if (barcodes.isNotEmpty) {
                         final String? qrData = barcodes.first.rawValue;
                         if (qrData != null) {
-                          Navigator.pop(context); // Закрываем сканер
+                          Navigator.pop(context);
                           _processQRData(qrData);
                         }
                       }
@@ -86,11 +86,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
-              const Text(
-                'Наведите камеру на QR-код',
-                style: TextStyle(color: Colors.grey),
-              ),
+              const SizedBox(height: 16)
             ],
           ),
         ),
@@ -115,9 +111,9 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       });
 
-      showMessage('QR-код считан. Пользователь: $userName');
-    } catch (e) {
-      showMessage('Ошибка обработки QR-кода: $e', isError: true);
+      showMessage(AppLocalizations.of(context)!.qr_code_scanned_user(userName!));
+    } catch (error) {
+      showMessage(AppLocalizations.of(context)!.qr_code_processing_error(error), isError: true);
     }
   }
 
@@ -136,7 +132,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_publicationController.text.isEmpty ||
         _usernameController.text.isEmpty ||
         _passwordController.text.isEmpty) {
-      showMessage('Заполните все поля', isError: true);
+      showMessage(AppLocalizations.of(context)!.fill_all_fields, isError: true);
       return;
     }
 
@@ -150,7 +146,7 @@ class _LoginScreenState extends State<LoginScreen> {
       await Authorization.checkAuthorization(auth);
     }
     catch (error) {
-      showMessage("Не удалось подключиться: " + error.toString(), isError: true);
+      showMessage(AppLocalizations.of(context)!.connection_failed(error), isError: true);
       setState(() {
         _isLoading = false;
       });
@@ -161,9 +157,10 @@ class _LoginScreenState extends State<LoginScreen> {
       _isLoading = false;
     });
 
-    showMessage("Успешная авторизация");
+    showMessage(AppLocalizations.of(context)!.authorization_success);
 
     auth.save(); // Сохранение данных авторизации
+    await auth.syncEmployee();
 
     // TODO: здесь надо открывать форму общей функцией. Скорее всего надо использовать SplashScreen(), т.к. там общий код
     Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => CabinetsScreen()));
@@ -173,9 +170,9 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Вход в систему'),
+        title: Text(AppLocalizations.of(context)!.login_screen_title),
         centerTitle: true,
-        backgroundColor: Colors.blue,
+        backgroundColor: AppT.c.primary,
         foregroundColor: Colors.white,
       ),
       body: SafeArea(
@@ -186,14 +183,12 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               const SizedBox(height: 20),
 
-              // Большая кнопка для сканирования QR
               QRButton(),
 
               const Divider(height: 40),
 
-              // Заголовок для ручного ввода
-              const Text(
-                'ИЛИ ВВЕДИТЕ ДАННЫЕ ВРУЧНУЮ',
+              Text(
+                AppLocalizations.of(context)!.manual_input_title,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
@@ -205,11 +200,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
               const SizedBox(height: 24),
 
-              // Поле "Публикация"
               publicationField(),
               const SizedBox(height: 16),
 
-              // Поле "Пользователь"
               userField(),
               const SizedBox(height: 16),
 
@@ -230,8 +223,7 @@ class _LoginScreenState extends State<LoginScreen> {
       controller: _passwordController,
       obscureText: !_isPasswordVisible,
       decoration: InputDecoration(
-        labelText: 'Пароль',
-        hintText: 'Введите пароль',
+        labelText: AppLocalizations.of(context)!.password,
         prefixIcon: const Icon(Icons.lock),
         suffixIcon: IconButton(
           icon: Icon(
@@ -262,7 +254,7 @@ class _LoginScreenState extends State<LoginScreen> {
       child: ElevatedButton(
         onPressed: _handleQRScan,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.blue,
+          backgroundColor: AppT.c.primary,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -272,7 +264,6 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Иконка QR кода (только одна)
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -286,12 +277,12 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
             const SizedBox(width: 16),
-            const Column(
+            Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'ОТСКАНИРОВАТЬ QR-КОД',
+                  AppLocalizations.of(context)!.scan_qrcode,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -300,7 +291,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 SizedBox(height: 4),
                 Text(
-                  'Быстрый вход по QR-коду',
+                  AppLocalizations.of(context)!.quick_login_qr,
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.white70,
@@ -319,7 +310,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return ElevatedButton(
       onPressed: _isLoading ? null : _handleLogin,
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.blue,
+        backgroundColor: AppT.c.primary,
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(vertical: 16),
         shape: RoundedRectangleBorder(
@@ -336,8 +327,8 @@ class _LoginScreenState extends State<LoginScreen> {
           strokeWidth: 2,
         ),
       )
-          : const Text(
-        'ВОЙТИ',
+          : Text(
+        AppLocalizations.of(context)!.log_in,
         style: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.bold,
@@ -352,8 +343,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return TextField(
       controller: _usernameController,
       decoration: InputDecoration(
-        labelText: 'Пользователь',
-        hintText: 'Имя пользователя',
+        labelText: AppLocalizations.of(context)!.username,
         prefixIcon: const Icon(Icons.person),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -369,8 +359,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return TextField(
       controller: _publicationController,
       decoration: InputDecoration(
-        labelText: 'Публикация',
-        hintText: 'URL публикации',
+        labelText: AppLocalizations.of(context)!.publication,
         prefixIcon: const Icon(Icons.public),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),

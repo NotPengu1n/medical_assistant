@@ -134,6 +134,84 @@ abstract class AppLocalizations {
   /// **'QR-code'**
   String get qrcode;
 
+  /// No description provided for @scan_qrcode.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan QR-code'**
+  String get scan_qrcode;
+
+  /// No description provided for @publication.
+  ///
+  /// In en, this message translates to:
+  /// **'Publication'**
+  String get publication;
+
+  /// No description provided for @username.
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get username;
+
+  /// No description provided for @password.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get password;
+
+  /// No description provided for @log_in.
+  ///
+  /// In en, this message translates to:
+  /// **'Log in'**
+  String get log_in;
+
+  /// No description provided for @quick_login_qr.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick login via QR code'**
+  String get quick_login_qr;
+
+  /// No description provided for @qr_code_scanned_user.
+  ///
+  /// In en, this message translates to:
+  /// **'QR code scanned. User: {userName}'**
+  String qr_code_scanned_user(Object userName);
+
+  /// No description provided for @qr_code_processing_error.
+  ///
+  /// In en, this message translates to:
+  /// **'QR code processing error: {error}'**
+  String qr_code_processing_error(Object error);
+
+  /// No description provided for @fill_all_fields.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill in all fields'**
+  String get fill_all_fields;
+
+  /// No description provided for @connection_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to connect: {error}'**
+  String connection_failed(Object error);
+
+  /// No description provided for @authorization_success.
+  ///
+  /// In en, this message translates to:
+  /// **'Authorization successful'**
+  String get authorization_success;
+
+  /// No description provided for @login_screen_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Login'**
+  String get login_screen_title;
+
+  /// No description provided for @manual_input_title.
+  ///
+  /// In en, this message translates to:
+  /// **'OR ENTER DATA MANUALLY'**
+  String get manual_input_title;
+
   /// No description provided for @emptySessions.
   ///
   /// In en, this message translates to:
@@ -155,7 +233,7 @@ abstract class AppLocalizations {
   /// No description provided for @appName.
   ///
   /// In en, this message translates to:
-  /// **'Kint: Medical assistant'**
+  /// **'Service marking (Nurse)'**
   String get appName;
 
   /// No description provided for @choose.
@@ -163,6 +241,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Choose'**
   String get choose;
+
+  /// No description provided for @period.
+  ///
+  /// In en, this message translates to:
+  /// **'Period'**
+  String get period;
+
+  /// No description provided for @choose_all.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose all'**
+  String get choose_all;
+
+  /// No description provided for @remove_all.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove all'**
+  String get remove_all;
+
+  /// No description provided for @no_cabinets.
+  ///
+  /// In en, this message translates to:
+  /// **'No cabinets'**
+  String get no_cabinets;
+
+  /// No description provided for @indicate_cabinets.
+  ///
+  /// In en, this message translates to:
+  /// **'Indicate cabinets'**
+  String get indicate_cabinets;
+
+  /// No description provided for @choose_cabinets.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose work cabinets'**
+  String get choose_cabinets;
+
+  /// No description provided for @rendered_sessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Rendered sessions'**
+  String get rendered_sessions;
 }
 
 class _AppLocalizationsDelegate

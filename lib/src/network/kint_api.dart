@@ -42,8 +42,16 @@ class KintApi {
 
   // Создание соединения с сервером
   void createConnection(){
+    var url = server.trim();
+
+    if (!url.startsWith('http')) {
+      url = 'https://$url';
+    }
+
+    url = url.endsWith('/') ? url.substring(0, url.length - 1) : url;
+
     connection = Dio(BaseOptions(
-        baseUrl: server,
+        baseUrl: url,
         connectTimeout: Duration(seconds: 10),
         receiveTimeout: Duration(seconds: 60),
         followRedirects: true,

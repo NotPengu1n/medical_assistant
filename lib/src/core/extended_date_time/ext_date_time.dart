@@ -22,4 +22,8 @@ extension DateTimeExtensions on DateTime {
   String strDayMonth() {
     return DateFormat('dd.MM').format(this);
   }
+
+  String strDayMonthYear() {
+    return DateFormat('dd.MM.yyyy').format(this);
+  }
 }
