@@ -110,6 +110,136 @@ class S {
     );
   }
 
+  /// `Scan QR-code`
+  String get scan_qrcode {
+    return Intl.message(
+      'Scan QR-code',
+      name: 'scan_qrcode',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Publication`
+  String get publication {
+    return Intl.message(
+      'Publication',
+      name: 'publication',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Username`
+  String get username {
+    return Intl.message(
+      'Username',
+      name: 'username',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Password`
+  String get password {
+    return Intl.message(
+      'Password',
+      name: 'password',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Log in`
+  String get log_in {
+    return Intl.message(
+      'Log in',
+      name: 'log_in',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Quick login via QR code`
+  String get quick_login_qr {
+    return Intl.message(
+      'Quick login via QR code',
+      name: 'quick_login_qr',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `QR code scanned. User: {userName}`
+  String qr_code_scanned_user(Object userName) {
+    return Intl.message(
+      'QR code scanned. User: $userName',
+      name: 'qr_code_scanned_user',
+      desc: '',
+      args: [userName],
+    );
+  }
+
+  /// `QR code processing error: {error}`
+  String qr_code_processing_error(Object error) {
+    return Intl.message(
+      'QR code processing error: $error',
+      name: 'qr_code_processing_error',
+      desc: '',
+      args: [error],
+    );
+  }
+
+  /// `Fill in all fields`
+  String get fill_all_fields {
+    return Intl.message(
+      'Fill in all fields',
+      name: 'fill_all_fields',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Failed to connect: {error}`
+  String connection_failed(Object error) {
+    return Intl.message(
+      'Failed to connect: $error',
+      name: 'connection_failed',
+      desc: '',
+      args: [error],
+    );
+  }
+
+  /// `Authorization successful`
+  String get authorization_success {
+    return Intl.message(
+      'Authorization successful',
+      name: 'authorization_success',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Login`
+  String get login_screen_title {
+    return Intl.message(
+      'Login',
+      name: 'login_screen_title',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `OR ENTER DATA MANUALLY`
+  String get manual_input_title {
+    return Intl.message(
+      'OR ENTER DATA MANUALLY',
+      name: 'manual_input_title',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Sessions is empty`
   String get emptySessions {
     return Intl.message(
@@ -140,10 +270,10 @@ class S {
     );
   }
 
-  /// `Kint: Medical assistant`
+  /// `Service marking (Nurse)`
   String get appName {
     return Intl.message(
-      'Kint: Medical assistant',
+      'Service marking (Nurse)',
       name: 'appName',
       desc: '',
       args: [],
@@ -155,6 +285,76 @@ class S {
     return Intl.message(
       'Choose',
       name: 'choose',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Period`
+  String get period {
+    return Intl.message(
+      'Period',
+      name: 'period',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Choose all`
+  String get choose_all {
+    return Intl.message(
+      'Choose all',
+      name: 'choose_all',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Remove all`
+  String get remove_all {
+    return Intl.message(
+      'Remove all',
+      name: 'remove_all',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No cabinets`
+  String get no_cabinets {
+    return Intl.message(
+      'No cabinets',
+      name: 'no_cabinets',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Indicate cabinets`
+  String get indicate_cabinets {
+    return Intl.message(
+      'Indicate cabinets',
+      name: 'indicate_cabinets',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Choose work cabinets`
+  String get choose_cabinets {
+    return Intl.message(
+      'Choose work cabinets',
+      name: 'choose_cabinets',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Rendered sessions`
+  String get rendered_sessions {
+    return Intl.message(
+      'Rendered sessions',
+      name: 'rendered_sessions',
       desc: '',
       args: [],
     );
