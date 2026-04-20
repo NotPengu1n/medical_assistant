@@ -1,8 +1,8 @@
 import 'package:hive/hive.dart';
 
-part 'directory.g.dart';  // Добавьте part
+part 'directory.g.dart';
 
-@HiveType(typeId: 0)  // Добавьте typeId для базового класса
+@HiveType(typeId: 0)
 class Directory {
   @HiveField(0)
   String? id = "";
