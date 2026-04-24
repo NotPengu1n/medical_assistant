@@ -106,4 +106,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get rendered_sessions => 'Оказанные услуги';
+
+  @override
+  String get show_completed => 'Показывать отмеченные';
+
+  @override
+  String get change_user => 'Сменить пользователя';
 }

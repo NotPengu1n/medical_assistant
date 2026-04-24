@@ -1,9 +1,13 @@
+import 'dart:collection';
+
 import 'package:flutter/material.dart';
 import 'package:medical_assistant/l10n/app_localizations.dart';
 import 'package:medical_assistant/src/app/app_navigation.dart';
 import 'package:medical_assistant/src/core/extended_date_time/ext_date_time.dart';
+import 'package:medical_assistant/src/data/auth_data_manager.dart';
 import 'package:medical_assistant/src/features/cabinets/cabinet.dart';
 import 'package:medical_assistant/src/features/services/service.dart';
+import 'package:medical_assistant/src/features/session_list/assigned_session.dart';
 import 'package:medical_assistant/src/features/session_list/date_slider.dart';
 import 'package:medical_assistant/src/features/session_list/qr_screen.dart';
 import 'package:medical_assistant/src/features/session_list/sessions_widget_list.dart';
@@ -19,12 +23,18 @@ class SessionsScreen extends StatefulWidget {
 
 class _SessionScreen extends State<SessionsScreen> {
   DateTime _selectedDate = DateTime.now().beginOfDay();
-  late Future<List<Map<String, dynamic>>> sessions;
+  late Future<List<AssignedSession>> sessions;
 
-  Set<Cabinet> cabinets = Set<Cabinet>();
+  final cabinets = SplayTreeSet<Cabinet>(
+        (a, b) => a.name!.compareTo(b.name!),
+  );
   ValueNotifier<Cabinet?> selectedCabinet = ValueNotifier(null);
-  Set<Service> services = Set<Service>();
+  final services = SplayTreeSet<Service>(
+        (a, b) => a.name!.compareTo(b.name!),
+  );
   ValueNotifier<Service?> selectedService = ValueNotifier(null);
+
+  bool showPassed = false;
 
   final ValueNotifier<bool> _showScrollButton = ValueNotifier(false);
   late final ScrollController _scrollController;
@@ -61,10 +71,10 @@ class _SessionScreen extends State<SessionsScreen> {
 
       setState(() { // Как-то тупо вызывать это в initState(), но в этом я не уверен.
         for (var session in value) {
-          Cabinet cabinet = Cabinet.fromMap(session["Кабинет"]);
+          Cabinet cabinet = Cabinet.fromMap(session.room!);
           cabinets.add(cabinet);
 
-          Service service = Service.fromMap(session["Услуга"]);
+          Service service = Service.fromMap(session.service!);
           services.add(service);
         }
       });
@@ -73,7 +83,7 @@ class _SessionScreen extends State<SessionsScreen> {
 
   // Список сеансов
   Widget bodyList() {
-    return FutureBuilder<List<Map<String, dynamic>>>(
+    return FutureBuilder<List<AssignedSession>>(
       future: sessions,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
@@ -101,7 +111,8 @@ class _SessionScreen extends State<SessionsScreen> {
               ...scrollingHeader(context),
 
               // Список / загрузка / пустое состояние
-              ...SessionsWidgetList.sessionCardWidgets(context, snapshot, data, refresh, selectedCabinet: selectedCabinet, selectedService: selectedService),
+              ...SessionsWidgetList.sessionCardWidgets(context, snapshot, data, refresh,
+                  selectedCabinet: selectedCabinet, selectedService: selectedService, showCompleted: showPassed),
 
               // Отступ снизу
               const SliverToBoxAdapter(
@@ -125,38 +136,88 @@ class _SessionScreen extends State<SessionsScreen> {
           style: TextStyle(color: AppT.c.surface),
         ),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.menu, color: AppT.c.surface),
-            onPressed: () {
-              showModalBottomSheet(
-                backgroundColor: AppT.c.primary,
-                context: context,
-                builder: (context) {
-                  return SafeArea(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        buttonOpenRenderedServices(context),
-                        buttonSelectWorkCabinets(context),
-                      ],
-                    ),
-                  );
-                },
-              );
-            },
-          ),
-        ]
+          actions: menu()
       ),
       body: Column(
         children: [
           Expanded(child: bodyList()),
-          //const SizedBox(height: 100,)
         ],
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: BottomMenu(context),
+      floatingActionButton: bottomMenu(context),
     );
+  }
+
+  // Меню приложения. // TODO: В отдельный класс надо вынести.
+  List<Widget> menu() {
+    return [
+      IconButton(
+        icon: Icon(Icons.menu, color: AppT.c.surface),
+        onPressed: () {
+          showDialog(
+            context: context,
+            builder: (dialogContext) {
+              return Dialog(
+                backgroundColor: AppT.c.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: StatefulBuilder(
+                  builder: (context, setStateDialog) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          FutureBuilder<String>(
+                            future: AuthDataManager.getEmployeeName(),
+                            builder: (_, snapshot) => Text(
+                              snapshot.data ?? '',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(color: AppT.c.surface)
+                            ),
+                          ),
+
+                          buttonShowCompleted(context, setStateDialog),
+
+                          const SizedBox(height: 8),
+
+                          Container(
+                            margin: const EdgeInsets.fromLTRB(12, 6, 12, 12),
+                            decoration: BoxDecoration(
+                              color: AppT.c.surface.withOpacity(0.08),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: AppT.c.surface.withOpacity(0.12),
+                              ),
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                buttonOpenRenderedServices(context),
+
+                                Divider(height: 1, color: AppT.c.surface.withOpacity(0.1)),
+
+                                buttonSelectWorkCabinets(context),
+
+                                Divider(height: 1, color: AppT.c.surface.withOpacity(0.1)),
+
+                                buttonChangeUser(context),
+                              ],
+                            ),
+                          )
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
+          );
+        },
+      ),
+    ];
   }
 
   // Кнопка пролистывания вверх
@@ -186,19 +247,98 @@ class _SessionScreen extends State<SessionsScreen> {
   }
 
   // Нижнее прикрепленное меню
-  Widget BottomMenu(BuildContext context) {
+  Widget bottomMenu(BuildContext context) {
     return Container(
       width: double.infinity,
-      //color: Colors.transparent,
       child: Stack(
         alignment: Alignment.center,
         children: [
-          QRScanButton(sessions: sessions),
+          QRScanButton(sessions: sessions, selectedService: selectedService, selectedCabinet: selectedCabinet),
           Positioned(
             left: 16,
             child: _buildScrollTopButton(),
           ),
         ],
+      ),
+    );
+  }
+
+  // Флажок "Показывать пройденные"
+  Widget buttonShowCompleted(BuildContext context, setStateDialog) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        setState(() {
+          showPassed = !showPassed;
+        });
+        setStateDialog(() {});
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 140),
+        margin: const EdgeInsets.fromLTRB(12, 12, 12, 6),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: AppT.c.surface.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: AppT.c.surface.withOpacity(0.12)
+          ),
+        ),
+        child: Stack(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    AppLocalizations.of(context)!.show_completed,
+                    style: TextStyle(
+                      color: AppT.c.surface,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 46,
+                  height: 26,
+                  padding: const EdgeInsets.all(3),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    color: AppT.c.surface.withOpacity(0.4),
+                  ),
+                  child: Align(
+                    alignment: showPassed
+                        ? Alignment.centerRight
+                        : Alignment.centerLeft,
+                    child: Container(
+                      width: 20,
+                      height: 20,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: showPassed
+                            ? AppT.c.primary
+                            : AppT.c.surface,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            AnimatedOpacity(
+              duration: const Duration(milliseconds: 120),
+              opacity: showPassed ? 0.06 : 0.0,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  color: AppT.c.primary,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -211,6 +351,7 @@ class _SessionScreen extends State<SessionsScreen> {
     );
   }
 
+  // Кнопка открытия отчета "Оказанные услуги"
   Widget buttonOpenRenderedServices(BuildContext context){
     return TextButton(
         onPressed: () => {AppNavigation.openRenderedServices(context)},
@@ -218,15 +359,25 @@ class _SessionScreen extends State<SessionsScreen> {
     );
   }
 
+  // Кнопка смены пользователя
+  Widget buttonChangeUser(BuildContext context){
+    return TextButton(
+        onPressed: () async {
+          await AuthDataManager.logout();
+          AppNavigation.openLogin(context);
+        },
+        child: Text(AppLocalizations.of(context)!.change_user, style: TextStyle(color: AppT.c.surface))
+    );
+  }
+
+  // Шапка списка (выбор кабинета, выбор услуги, выбор даты)
   List<Widget> scrollingHeader(BuildContext context) {
     return [
-      //SliverToBoxAdapter(child: buttonOpenRenderedServices(context)),
-
-      //SliverToBoxAdapter(child: buttonSelectWorkCabinets(context)),
-
       SliverToBoxAdapter(child: buildCabinetsSelector(context)),
 
       SliverToBoxAdapter(child: buildServicesSelector(context)),
+
+      SliverToBoxAdapter(child: const SizedBox(height: 10)),
 
       SliverToBoxAdapter(
         child: DateSlider(
@@ -257,31 +408,29 @@ class _SessionScreen extends State<SessionsScreen> {
   Widget selectorList<T>(Set<T> list, ValueNotifier<T?> selector) {
     final items = list.toList();
 
+    if (items.length <= 1) return const SizedBox.shrink();
+
     return Container(
         margin: EdgeInsetsGeometry.symmetric(horizontal: 10),
-        child: SizedBox(
-          height: 50,
-          child: ValueListenableBuilder<T?>(
-            valueListenable: selector,
-            builder: (context, selectedValue, _) {
-              return ListView.builder(
-                scrollDirection: Axis.horizontal,
-                physics: const BouncingScrollPhysics(),
-                itemCount: items.length,
-                itemBuilder: (context, index) {
+        child: ValueListenableBuilder<T?>(
+          valueListenable: selector,
+          builder: (context, selectedValue, _) {
+            return SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              child: Row(
+                children: List.generate(items.length, (index) {
                   final elem = items[index];
                   final isSelected = elem == selectedValue;
 
                   return Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 0, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 6),
                     child: GestureDetector(
                       onTap: () {
                         setState(() {
                           if (elem == selector.value) {
                             selector.value = null;
-                          }
-                          else {
+                          } else {
                             selector.value = elem;
                           }
                         });
@@ -299,13 +448,11 @@ class _SessionScreen extends State<SessionsScreen> {
                           ),
                           decoration: BoxDecoration(
                             color: isSelected ? AppT.c.primary : AppT.c.surface,
-                            borderRadius: BorderRadius.circular(18), // TODO: Сделать как везде
+                            borderRadius: BorderRadius.circular(18),
                             border: Border.all(
-                              color: isSelected
-                                  ? AppT.c.primary
-                                  : AppT.c.surface,
+                              color: isSelected ? AppT.c.primary : AppT.c.surface,
                               width: 1,
-                            )
+                            ),
                           ),
                           child: AnimatedDefaultTextStyle(
                             duration: const Duration(milliseconds: 180),
@@ -314,18 +461,25 @@ class _SessionScreen extends State<SessionsScreen> {
                               fontSize: 14,
                               fontWeight:
                               isSelected ? FontWeight.w600 : FontWeight.w500,
-                              color: isSelected ? AppT.c.surface : AppT.c.textPrimary,
+                              color: isSelected
+                                  ? AppT.c.surface
+                                  : AppT.c.textPrimary,
                             ),
-                            child: Text(elem.toString()),
+                            child: Text(
+                              elem.toString(),
+                              maxLines: 1,
+                              softWrap: false,
+                              overflow: TextOverflow.fade,
+                            ),
                           ),
                         ),
                       ),
                     ),
                   );
-                },
-              );
-            },
-          ),
+                }),
+              ),
+            );
+          },
         )
     );
   }

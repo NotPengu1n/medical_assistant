@@ -1,11 +1,9 @@
 
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:medical_assistant/src/app/splash_screen.dart';
 import 'package:medical_assistant/src/features/cabinets/cabinets_screen.dart';
 import 'package:medical_assistant/src/features/login/login_screen.dart';
 import 'package:medical_assistant/src/features/rendered_services/rendered_services.dart';
-import 'package:medical_assistant/src/features/session_list/qr_screen.dart';
 import 'package:medical_assistant/src/features/session_list/sessions_screen.dart';
 
 // Проводник по экранам
@@ -55,5 +53,14 @@ class AppNavigation {
 
   static void openRenderedServices(BuildContext context) {
     _openScreen(renderedServicesName, context);
+  }
+
+  // По сути перезапускаем приложение
+  static void openSplashScreen(BuildContext context) {
+    _replaceScreen(splashName, context);
+  }
+
+  static void openLogin(BuildContext context) {
+    _replaceScreen(loginName, context);
   }
 }

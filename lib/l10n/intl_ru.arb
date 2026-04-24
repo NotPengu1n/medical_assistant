@@ -30,5 +30,7 @@
   "no_cabinets": "Нет доступных кабинетов",
   "indicate_cabinets": "Укажите рабочие кабинеты",
   "choose_cabinets": "Выбрать рабочие кабинеты",
-  "rendered_sessions": "Оказанные услуги"
+  "rendered_sessions": "Оказанные услуги",
+  "show_completed": "Показывать отмеченные",
+  "change_user": "Сменить пользователя"
 }

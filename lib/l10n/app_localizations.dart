@@ -283,6 +283,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Rendered sessions'**
   String get rendered_sessions;
+
+  /// No description provided for @show_completed.
+  ///
+  /// In en, this message translates to:
+  /// **'Show completed'**
+  String get show_completed;
+
+  /// No description provided for @change_user.
+  ///
+  /// In en, this message translates to:
+  /// **'Change user'**
+  String get change_user;
 }
 
 class _AppLocalizationsDelegate

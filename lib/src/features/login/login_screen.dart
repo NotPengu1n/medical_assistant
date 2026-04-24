@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:medical_assistant/l10n/app_localizations.dart';
+import 'package:medical_assistant/src/app/app_navigation.dart';
 import 'package:medical_assistant/src/data/auth_data_manager.dart';
-import 'package:medical_assistant/src/features/cabinets/cabinets_screen.dart';
 import 'package:medical_assistant/src/features/login/authorization.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:medical_assistant/ui_kit/ui_kit.dart';
@@ -12,6 +12,16 @@ class LoginScreen extends StatefulWidget {
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
+
+  static void showMessage(String text, BuildContext context, {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(text),
+        backgroundColor: (isError ? Colors.red : Colors.green),
+        duration: Duration(seconds: 10),
+      ),
+    );
+  }
 }
 
 class _LoginScreenState extends State<LoginScreen> {
@@ -111,28 +121,17 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       });
 
-      showMessage(AppLocalizations.of(context)!.qr_code_scanned_user(userName!));
+      LoginScreen.showMessage(AppLocalizations.of(context)!.qr_code_scanned_user(userName!), context);
     } catch (error) {
-      showMessage(AppLocalizations.of(context)!.qr_code_processing_error(error), isError: true);
+      LoginScreen.showMessage(AppLocalizations.of(context)!.qr_code_processing_error(error), context, isError: true);
     }
-  }
-
-  void showMessage(String text, {bool isError = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(text),
-        backgroundColor: (isError ? Colors.red : Colors.green),
-        duration: Duration(seconds: 10),
-      ),
-    );
   }
 
   // Обработка нажатия кнопки входа
   Future<void> _handleLogin() async {
-    if (_publicationController.text.isEmpty ||
-        _usernameController.text.isEmpty ||
-        _passwordController.text.isEmpty) {
-      showMessage(AppLocalizations.of(context)!.fill_all_fields, isError: true);
+    // Решили, что пароль необязательный
+    if (_publicationController.text.isEmpty || _usernameController.text.isEmpty) {
+      LoginScreen.showMessage(AppLocalizations.of(context)!.fill_all_fields, context, isError: true);
       return;
     }
 
@@ -146,7 +145,7 @@ class _LoginScreenState extends State<LoginScreen> {
       await Authorization.checkAuthorization(auth);
     }
     catch (error) {
-      showMessage(AppLocalizations.of(context)!.connection_failed(error), isError: true);
+      LoginScreen.showMessage(AppLocalizations.of(context)!.connection_failed(error), context, isError: true);
       setState(() {
         _isLoading = false;
       });
@@ -157,13 +156,15 @@ class _LoginScreenState extends State<LoginScreen> {
       _isLoading = false;
     });
 
-    showMessage(AppLocalizations.of(context)!.authorization_success);
+    LoginScreen.showMessage(AppLocalizations.of(context)!.authorization_success, context);
 
-    auth.save(); // Сохранение данных авторизации
+    await auth.save(); // Сохранение данных авторизации
     await auth.syncEmployee();
 
     // TODO: здесь надо открывать форму общей функцией. Скорее всего надо использовать SplashScreen(), т.к. там общий код
-    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => CabinetsScreen()));
+    //Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => CabinetsScreen()));
+    //AppNavigation.openSplashScreen(context);
+    AppNavigation.openCabinets(context); // Решили, что всегда нужно открывать после авторизации выбор рабочего кабинета.
   }
 
   @override
@@ -340,17 +341,61 @@ class _LoginScreenState extends State<LoginScreen> {
 
   // Поле "Пользователь"
   Widget userField() {
-    return TextField(
-      controller: _usernameController,
-      decoration: InputDecoration(
-        labelText: AppLocalizations.of(context)!.username,
-        prefixIcon: const Icon(Icons.person),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        filled: true,
-        fillColor: Colors.grey.shade50,
-      ),
+    return FutureBuilder<List<String>>(
+      future: AuthDataManager.getUserLogins(),
+      builder: (context, snapshot) {
+        final users = snapshot.data ?? [];
+
+        return Autocomplete<String>(
+          initialValue: TextEditingValue(text: _usernameController.text),
+
+          optionsBuilder: (TextEditingValue textEditingValue) {
+            if (users.isEmpty) {
+              return const Iterable<String>.empty();
+            }
+
+            final query = textEditingValue.text.toLowerCase();
+
+            return users.where((user) {
+              return user.toLowerCase().contains(query);
+            });
+          },
+
+          onSelected: (String selectedUser) {
+            _usernameController.text = selectedUser;
+          },
+
+          fieldViewBuilder: (
+              context,
+              textEditingController,
+              focusNode,
+              onFieldSubmitted,
+              ) {
+            textEditingController.text = _usernameController.text;
+
+            textEditingController.addListener(() {
+              _usernameController.text = textEditingController.text;
+            });
+
+            return TextField(
+              controller: textEditingController,
+              focusNode: focusNode,
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.username,
+                prefixIcon: const Icon(Icons.person),
+                suffixIcon: users.isNotEmpty
+                    ? const Icon(Icons.arrow_drop_down)
+                    : null,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                filled: true,
+                fillColor: Colors.grey.shade50,
+              ),
+            );
+          },
+        );
+      },
     );
   }
 

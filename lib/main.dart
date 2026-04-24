@@ -5,12 +5,7 @@ import 'package:medical_assistant/core/branding/brand_theme_manager.dart';
 import 'package:medical_assistant/l10n/app_localizations.dart';
 import 'package:medical_assistant/src/app/app_navigation.dart';
 import 'package:medical_assistant/src/features/cabinets/cabinets_data.dart';
-import 'package:medical_assistant/src/features/cabinets/cabinets_screen.dart';
-import 'package:medical_assistant/src/features/login/login_screen.dart';
-import 'package:medical_assistant/src/features/rendered_services/rendered_services.dart';
-import 'package:medical_assistant/src/features/session_list/sessions_screen.dart';
 import 'package:medical_assistant/src/network/kint_api_exception.dart';
-import 'package:medical_assistant/src/app/splash_screen.dart';
 import 'package:medical_assistant/ui_kit/ui_kit.dart';
 
 void main() async {
@@ -41,9 +36,17 @@ class MedicalAssistant extends StatelessWidget {
         supportedLocales: AppLocalizations.supportedLocales,
       locale: PlatformDispatcher.instance.locale,
       onGenerateTitle: (context) => AppLocalizations.of(context)!.appName,
-      theme: ThemeData(primarySwatch: Colors.blue),
+      theme: theme(),
       initialRoute: '/splash',
       routes: AppNavigation.routes(),
+    );
+  }
+
+  ThemeData theme() {
+    return ThemeData(
+      colorScheme: ColorScheme.fromSeed(seedColor: AppT.c.primary),
+      useMaterial3: true,
+      appBarTheme: AppBarTheme(iconTheme: IconThemeData(color: AppT.c.surface),)
     );
   }
 }

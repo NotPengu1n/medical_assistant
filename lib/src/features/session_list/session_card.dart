@@ -5,18 +5,19 @@ import 'package:medical_assistant/l10n/app_localizations.dart';
 import 'package:medical_assistant/src/core/extended_date_time/ext_date_time.dart';
 import 'package:medical_assistant/src/core/extended_string/ext_string.dart';
 import 'package:medical_assistant/src/core/sprite_icon/sprite_icon.dart';
-import 'package:medical_assistant/src/network/synchronization.dart';
+import 'package:medical_assistant/src/data/settings.dart';
+import 'package:medical_assistant/src/features/session_list/assigned_session.dart';
 import 'package:medical_assistant/ui_kit/ui_kit.dart';
 
 class SessionCard extends StatefulWidget {
-  final Map session;
+  late AssignedSession session;
   bool isVisible = true;
+  bool isDisclosureVisible = false;
   final VoidCallback refreshParent;
+  bool showPassed = false;
 
-  SessionCard({super.key, required this.session, required this.refreshParent}) {
-    session["Дата"] = session["ДатаСеанса"];
-    session["Исполнитель"] = null;
-    session["фПлатная"] = session["Платная"];
+  SessionCard({super.key, required this.session, required this.refreshParent, required this.showPassed}) {
+
   }
 
   @override
@@ -30,12 +31,12 @@ class _SessionCardState extends State<SessionCard> {
   bool isPaid = false;
   bool hasBeenPaid = false;
   int seatsNumber = 0;
-  bool isDisclosureVisible = false;
   final borderRadius = BorderRadius.circular(AppT.r.lg);
   final paddingCard = EdgeInsets.symmetric(horizontal: AppT.r.lg, vertical: AppT.r.lg / 2);
 
   int iconPriorityId = 0;
   String priority = "";
+  bool markAvailable = false;
 
   @override
   void initState() {
@@ -44,20 +45,22 @@ class _SessionCardState extends State<SessionCard> {
 
   // Инициализация переменных класса
   void initializeVariables() {
-    DateTime sessionDate = DateTime.parse(widget.session["ДатаСеанса"]);
+    DateTime sessionDate = DateTime.parse(widget.session.sessionDate!);
 
-    isPassed = widget.session["isPassed"];
-    isNoShow = widget.session["isNoShow"];
+    isPassed = widget.session.isPassed!;
+    isNoShow = widget.session.isNoShow!;
     isFutureSession = sessionDate.beginOfDay().isAfter(
       DateTime.now().beginOfDay(),
     );
-    seatsNumber = widget.session["Мест"] ?? 0;
+    seatsNumber = widget.session.places ?? 0;
 
-    iconPriorityId = widget.session["НомерИконкиФизлица"] ?? 0;
-    priority = widget.session["ПредставлениеМетки"] ?? "";
+    iconPriorityId = widget.session.personIconNumber ?? 0;
+    priority = widget.session.labelRepresentation ?? "";
 
-    isPaid = widget.session["фПлатная"] ?? false;
-    hasBeenPaid = widget.session["фОплачено"] ?? true;
+    isPaid = widget.session.isPaid ?? false;
+    hasBeenPaid = widget.session.isPaymentCompleted ?? true;
+
+    markAvailable = !(Settings.qrCodeOnly || isNoShow || isPassed) && !isFutureSession; // Отметка только по QR коду = свайп отключен.
   }
 
   @override
@@ -65,7 +68,7 @@ class _SessionCardState extends State<SessionCard> {
     initializeVariables();
 
     return Visibility(
-      key: ValueKey(widget.session["id"]),
+      key: ValueKey(widget.session.id),
       visible: widget.isVisible,
       child: Container(
         margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
@@ -80,38 +83,55 @@ class _SessionCardState extends State<SessionCard> {
 
   // Тело сеанса, которое можно свайпать
   Widget swipeBody(BuildContext context) {
-    return Dismissible(
-      key: ValueKey(widget.session["id"]),
-      direction: DismissDirection.horizontal,
+    if (!markAvailable) {
+      return sessionBody(context, borderRadius);
+    }
+    else {
+      return Dismissible(
+        key: ValueKey(widget.session.id),
+        direction: DismissDirection.horizontal,
 
-      confirmDismiss: (direction) async {
-        return true;
-      },
+        confirmDismiss: (direction) async {
+          if (widget.showPassed) {
+            swipeAction(direction);
+            return false;
+          }
+          return true;
+        },
 
-      onDismissed: (direction) {
-        if (direction == DismissDirection.endToStart) {
-          markSession(); // Влево - оказываем услугу
-        } else if (direction == DismissDirection.startToEnd) {
-          cancelSession(); // Вправо - неявка на услугу
-        }
-      },
+        onUpdate: (details) {
 
-      background: _buildDismissBackground(
-        borderRadius: borderRadius,
-        color: AppT.c.error,
-        alignment: Alignment.centerLeft,
-        text: AppLocalizations.of(context)!.noshow,
-      ),
+        },
 
-      secondaryBackground: _buildDismissBackground(
-        borderRadius: borderRadius,
-        color: AppT.c.primary,
-        alignment: Alignment.centerRight,
-        text: AppLocalizations.of(context)!.mark,
-      ),
+        onDismissed: (direction) {
+          swipeAction(direction);
+        },
 
-      child: sessionBody(context, borderRadius),
-    );
+        background: _buildDismissBackground(
+          borderRadius: borderRadius,
+          color: AppT.c.error,
+          alignment: Alignment.centerLeft,
+          text: AppLocalizations.of(context)!.noshow,
+        ),
+
+        secondaryBackground: _buildDismissBackground(
+          borderRadius: borderRadius,
+          color: AppT.c.primary,
+          alignment: Alignment.centerRight,
+          text: AppLocalizations.of(context)!.mark,
+        ),
+
+        child: sessionBody(context, borderRadius),
+      );
+    }
+  }
+
+  void swipeAction(direction) {
+    if (direction == DismissDirection.endToStart) {
+      markSession(); // Влево - оказываем услугу
+    } else if (direction == DismissDirection.startToEnd) {
+      cancelSession(); // Вправо - неявка на услугу
+    }
   }
 
   // Фон свайпера
@@ -156,7 +176,7 @@ class _SessionCardState extends State<SessionCard> {
               borderRadius: borderRadius,
               onTap: () {
                 setState(() {
-                  isDisclosureVisible = !isDisclosureVisible;
+                  widget.isDisclosureVisible = !widget.isDisclosureVisible;
                 });
               },
               child: mainInfo(),
@@ -165,7 +185,7 @@ class _SessionCardState extends State<SessionCard> {
               duration: const Duration(milliseconds: 250),
               curve: Curves.easeInOut,
               alignment: Alignment.topCenter,
-              child: isDisclosureVisible
+              child: widget.isDisclosureVisible
                   ? disclosureInfo(context)
                   : const SizedBox.shrink(),
             ),
@@ -234,7 +254,9 @@ class _SessionCardState extends State<SessionCard> {
 
           ...commentBox(),
 
-          sessionButtons(context),
+          if (markAvailable) ...[
+            sessionButtons(context)
+          ]
         ],
       ),
     );
@@ -242,7 +264,7 @@ class _SessionCardState extends State<SessionCard> {
 
   // Параметры назначения
   String assignmentParametrs() {
-    String value = widget.session["ПредставлениеПараметровНазначения"];
+    String value = widget.session.parametersRepresentation ?? "";
     if (value.isEmpty) return "";
     return ' • $value';
   }
@@ -279,8 +301,8 @@ class _SessionCardState extends State<SessionCard> {
 
   // Место оказания услуги
   String getLocationText() {
-    String cabinet = widget.session["Кабинет"]?["Наименование"] ?? "";
-    String equipment = widget.session["Оборудование"]?["Наименование"] ?? "";
+    String cabinet = widget.session.room?["Наименование"] ?? "";
+    String equipment = widget.session.equipment?["Наименование"] ?? "";
 
     if (cabinet.isEmpty && equipment.isEmpty) return "Местоположение не указано";
     if (cabinet.isEmpty) return equipment;
@@ -300,28 +322,32 @@ class _SessionCardState extends State<SessionCard> {
     );
   }
 
-  Future<bool> _handleSessionAction({required bool isCancel, required void Function() onSuccess}) async {
+  Future<bool> _handleSessionAction({required bool isCancel}) async {
     try {
-      // setState(() {
-      //   widget.isVisible = false;
-      // });
-
-      widget.session["ВременнаяВидимость"] = false;
-      widget.refreshParent();
-
-      final result = await Synchronization.markSession(widget.session, isCancel, false);
+      bool result = await widget.session.handleSessionAction(isCancel: isCancel,
+          updateState: () {
+            if (widget.showPassed) {
+              Future.delayed(
+                  const Duration(milliseconds: (250)), () { // Костыль
+                if (!mounted) return;
+                widget.refreshParent();
+                setState(() {});
+              });
+            }
+            else {
+              widget.refreshParent();
+              setState(() {});
+            }
+          }
+      );
 
       if (result && mounted) {
-        widget.session["ВременнаяВидимость"] = true; // Возвращаем флаг назад, т.к. флаг временный. После этого видимость определяется другими параметрами
-        setState(onSuccess);
+
       }
     } catch (error) {
-      // setState(() {
-      //   widget.isVisible = true;
-      // });
       showMessage(error.toString(), isError: true);
-      widget.session["ВременнаяВидимость"] = true;
       widget.refreshParent();
+      setState(() {});
       return false;
     }
 
@@ -330,22 +356,12 @@ class _SessionCardState extends State<SessionCard> {
 
   // Обработчик команды отметки сеанса
   Future<bool> markSession() async {
-    return _handleSessionAction(
-      isCancel: false,
-      onSuccess: () {
-        widget.session["Пройдено"] = 1;
-      },
-    );
+    return _handleSessionAction(isCancel: false);
   }
 
   // Обработчик команды неявки на сеанс
   Future<bool> cancelSession() async {
-    return _handleSessionAction(
-      isCancel: true,
-      onSuccess: () {
-        widget.session["Осталось"] = 0;
-      },
-    );
+    return _handleSessionAction(isCancel: true);
   }
 
   // TODO: вынести в общий модуль
@@ -380,7 +396,7 @@ class _SessionCardState extends State<SessionCard> {
 
   // Виджет услуги
   Widget serviceBox() {
-    String serviceName = (widget.session["Услуга"]?["Наименование"] ?? "Услуга не указана") + assignmentParametrs();
+    String serviceName = (widget.session.service?["Наименование"] ?? "Услуга не указана") + assignmentParametrs();
 
     return Text(
       serviceName,
@@ -388,7 +404,7 @@ class _SessionCardState extends State<SessionCard> {
         fontWeight: FontWeight.w500,
         color: AppT.c.textSecondary,
       ),
-      maxLines: isDisclosureVisible ? 5 : 1,
+      maxLines: widget.isDisclosureVisible ? 5 : 1,
       overflow: TextOverflow.ellipsis,
     );
   }
@@ -396,7 +412,7 @@ class _SessionCardState extends State<SessionCard> {
   // Виджет пациента
   Widget patientBox() {
     String patientName =
-        widget.session["Пациент"]?["Наименование"] ?? "Пациент не указан";
+        widget.session.patient?["Наименование"] ?? "Пациент не указан";
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -408,7 +424,7 @@ class _SessionCardState extends State<SessionCard> {
             fontSize: 16,
             color: AppT.c.textPrimary,
           ),
-          maxLines: isDisclosureVisible ? 5 : 1,
+          maxLines: widget.isDisclosureVisible ? 5 : 1,
           overflow: TextOverflow.ellipsis,
         )
       ],
@@ -417,7 +433,7 @@ class _SessionCardState extends State<SessionCard> {
 
   // Виджет комментарий
   List<Widget> commentBox() {
-    String comment = widget.session["Комментарий"] ?? "";
+    String comment = widget.session.comment ?? "";
 
     if (comment.isNotEmpty)
       return [
@@ -439,7 +455,7 @@ class _SessionCardState extends State<SessionCard> {
 
   // Время сеанса
   Widget timeBox() {
-    DateTime time = widget.session["ВремяС"];
+    DateTime time = DateTime.parse(widget.session.timeFrom!);
     String strTime = (time.isEmpty()
         ? "--:--"
         : DateFormat("HH:mm").format(time));
@@ -486,7 +502,7 @@ class _SessionCardState extends State<SessionCard> {
   Widget iconPaidInfo() {
     return Text(
       '₽',
-      style: TextStyle(fontSize: 16, color: (hasBeenPaid ? AppT.c.success : AppT.c.error)),
+      style: TextStyle(fontSize: 16, color: (hasBeenPaid ? AppT.c.success : AppT.c.error), fontWeight: FontWeight.bold),
     );
   }
 
@@ -507,9 +523,16 @@ class _SessionCardState extends State<SessionCard> {
 
   // Стиль оформления всей карточки сеанса
   BoxDecoration cardDecoration() {
+    Color backgroundColor = AppT.c.surface;
+
+    if (isNoShow)
+      backgroundColor = AppT.c.error.withAlpha(50);
+    else if (isPassed)
+      backgroundColor = AppT.c.success.withAlpha(50);
+
     return BoxDecoration(
       borderRadius: borderRadius,
-      color: AppT.c.surface,
+      color: backgroundColor,
       boxShadow: [
         // BoxShadow(
         //   color: AppT.c.textPrimary.withValues(alpha: 0.1),

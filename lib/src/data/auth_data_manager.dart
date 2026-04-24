@@ -8,7 +8,8 @@ class AuthDataManager {
   String? user;
   String? password;
 
-  static String? employeeCache;
+  static String? _employeeCache;
+  static String? _emloyeeNameCache;
 
   AuthDataManager(){}
 
@@ -29,24 +30,46 @@ class AuthDataManager {
     await storage.write(key: 'publication', value: publication);
     await storage.write(key: 'user', value: user);
     await storage.write(key: 'password', value: password);
+
+    // Сохраняем в список пользователей.
+    addUserLogin(user ?? "");
+  }
+
+  // Удалить данные авторизованного пользователя
+  static Future<void> logout() async {
+    final storage = FlutterSecureStorage();
+    await storage.delete(key: 'user');
+    await storage.delete(key: 'password');
   }
 
   // Получаем сотрудника по пользователю и сохраняем его
   Future<void> syncEmployee() async {
-    String? employee = await Synchronization.getEmployee(user!);
+    Map<String, dynamic> employee = await Synchronization.getEmployee(user!);
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('employee', employee ?? '');
-    employeeCache = employee;
+    String emloyeeId = employee["Идентификатор"] ?? "";
+    await prefs.setString('employee', emloyeeId);
+    await prefs.setString('employeeName', employee["Наименование"] ?? "");
+    _employeeCache = emloyeeId;
   }
 
   // Получить идентификатор сотрудника из хранилища
   static Future<Map<String, dynamic>> getEmployee() async {
-    if (employeeCache != null) {
-      return {"id": employeeCache};
+    if (_employeeCache != null) {
+      return {"id": _employeeCache};
     }
     final prefs = await SharedPreferences.getInstance();
-    employeeCache = prefs.getString('employee');
-    return {"id": employeeCache};
+    _employeeCache = prefs.getString('employee');
+    return {"id": _employeeCache};
+  }
+
+  // Получить имя текущего сотрудника
+  static Future<String> getEmployeeName() async {
+    if (_emloyeeNameCache != null) {
+      return _emloyeeNameCache ?? "";
+    }
+    final prefs = await SharedPreferences.getInstance();
+    _emloyeeNameCache = prefs.getString('employeeName');
+    return _emloyeeNameCache ?? "";
   }
 
   // Получение данных авторизации
@@ -59,5 +82,23 @@ class AuthDataManager {
     auth.password = await storage.read(key: 'password');
 
     return auth;
+  }
+
+  // Добавляем список пользователей, под которыми происходила авторизация в МП.
+  Future<void> addUserLogin(String login) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final List<String> users = prefs.getStringList('user_logins') ?? [];
+
+    if (!users.contains(login)) {
+      users.add(login);
+      await prefs.setStringList('user_logins', users);
+    }
+  }
+
+  // Получаем список пользователей, под которыми происходила авторизация в МП.
+  static Future<List<String>> getUserLogins() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList('user_logins') ?? [];
   }
 }

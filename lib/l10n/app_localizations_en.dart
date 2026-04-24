@@ -106,4 +106,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rendered_sessions => 'Rendered sessions';
+
+  @override
+  String get show_completed => 'Show completed';
+
+  @override
+  String get change_user => 'Change user';
 }

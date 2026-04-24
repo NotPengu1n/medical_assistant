@@ -7,19 +7,28 @@ import 'package:medical_assistant/src/core/extended_date_time/ext_date_time.dart
 import 'package:medical_assistant/ui_kit/ui_kit.dart';
 
 class DateSlider extends StatefulWidget {
-  final Function(DateTime)? onDateSelected;
+  final ValueChanged<DateTime>? onDateSelected;
   final DateTime? initialDate;
-  final double itemWidth = 70;
-  final double itemHeight = 55;
 
-  DateSlider({Key? key, this.onDateSelected, this.initialDate})
-    : super(key: key);
+  const DateSlider({
+    Key? key,
+    this.onDateSelected,
+    this.initialDate,
+  }) : super(key: key);
 
   @override
-  _DateSliderState createState() => _DateSliderState();
+  State<DateSlider> createState() => _DateSliderState();
 }
 
 class _DateSliderState extends State<DateSlider> {
+  static const double _itemMinHeight = 55;
+
+  static const double _horizontalPadding = 12;
+  static const double _itemSpacing = 6;
+
+  static const double _minItemWidth = 50;
+  static const double _maxItemWidth = 110;
+
   late DateTime _selectedDate;
   DateTime? calendarSelectedDate;
   late List<DateTime> _dates;
@@ -41,24 +50,8 @@ class _DateSliderState extends State<DateSlider> {
     _dates = [];
     final now = DateTime.now();
 
-    // Позавчера, вчера, сегодня, завтра, выбрать день.
     for (int i = -2; i <= 1; i++) {
       _dates.add(DateTime(now.year, now.month, now.day + i));
-    }
-  }
-
-  void _scrollToSelectedDate() {
-    final index = _dates.indexWhere((date) => _isSameDay(date, _selectedDate));
-
-    if (index != -1) {
-      _scrollController.animateTo(
-        (index * (widget.itemWidth + 8)).clamp(
-          0,
-          _scrollController.position.maxScrollExtent,
-        ),
-        duration: Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
     }
   }
 
@@ -73,122 +66,161 @@ class _DateSliderState extends State<DateSlider> {
     return _isSameDay(date, now);
   }
 
+  void _scrollToSelectedDate() {
+    if (!_scrollController.hasClients) return;
+
+    final index = _dates.indexWhere((date) => _isSameDay(date, _selectedDate));
+    if (index == -1) return;
+
+    final approxItemExtent = _minItemWidth + _itemSpacing;
+    final targetOffset = index * approxItemExtent;
+
+    _scrollController.animateTo(
+      targetOffset.clamp(
+        0,
+        _scrollController.position.maxScrollExtent,
+      ),
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
   @override
   void dispose() {
     _scrollController.dispose();
     super.dispose();
   }
 
+  double _calculateItemWidth(double maxWidth, int totalItems) {
+    final totalHorizontalPadding = _horizontalPadding * 2;
+    final totalSpacing = (totalItems - 1) * _itemSpacing;
+    final available = maxWidth - totalHorizontalPadding - totalSpacing;
+
+    final fittedWidth = available / totalItems;
+    return fittedWidth.clamp(_minItemWidth, _maxItemWidth);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: widget.itemHeight,
-      color: Colors.transparent,
-      child: ListView.builder(
-        controller: _scrollController,
-        scrollDirection: Axis.horizontal,
-        physics: BouncingScrollPhysics(),
-        padding: EdgeInsets.symmetric(horizontal: 16),
-        itemCount: _dates.length + 1,
-        itemBuilder: (context, index) {
-          if (index == _dates.length) {
-            return calendarButton(context);
-          }
+    final totalItems = _dates.length + 1;
 
-          final date = _dates[index];
-          final isSelected = _isSameDay(date, _selectedDate);
-          final isToday = _isToday(date);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final itemWidth = _calculateItemWidth(constraints.maxWidth, totalItems);
+
+        final children = List<Widget>.generate(totalItems, (index) {
+          final isLast = index == _dates.length;
 
           return Padding(
-            padding: EdgeInsets.symmetric(horizontal: 4),
-            child: _DateItem(
-              date: date,
-              isSelected: isSelected,
-              isToday: isToday,
-              width: widget.itemWidth,
-              height: widget.itemHeight,
-              onTap: () {
-                setState(() {
-                  _selectedDate = date;
-                  calendarSelectedDate = null;
-                });
-                //_scrollToSelectedDate();
-                widget.onDateSelected?.call(date);
-              },
+            padding: EdgeInsets.only(
+              right: index == totalItems - 1 ? 0 : _itemSpacing,
+            ),
+            child: SizedBox(
+              width: isLast ? null : itemWidth,
+              child: isLast
+                  ? _buildCalendarButton(context, itemWidth)
+                  : _buildDateItem(index, itemWidth),
             ),
           );
-        },
-      ),
+        });
+
+        return SingleChildScrollView(
+          controller: _scrollController,
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: _horizontalPadding),
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: children,
+            ),
+          ),
+        );
+      },
     );
   }
 
-  // Кнопка выбора даты из календаря
-  Widget calendarButton(BuildContext context) {
-    final isSelected =
-        calendarSelectedDate != null && _isSameDay(calendarSelectedDate!, _selectedDate);
+  Widget _buildDateItem(int index, double width) {
+    final date = _dates[index];
+    final isSelected = _isSameDay(date, _selectedDate);
+    final isToday = _isToday(date);
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: GestureDetector(
-        onTap: () async {
-          final pickedDate = await showDatePicker(
-            context: context,
-            initialDate: _selectedDate,
-            firstDate: DateTime(2000),
-            lastDate: DateTime(2100),
-            locale: PlatformDispatcher.instance.locale,
-          );
+    return _DateItem(
+      date: date,
+      isSelected: isSelected,
+      isToday: isToday,
+      width: width,
+      minHeight: _itemMinHeight,
+      onTap: () {
+        setState(() {
+          _selectedDate = date;
+          calendarSelectedDate = null;
+        });
+        widget.onDateSelected?.call(date);
+      },
+    );
+  }
 
-          if (pickedDate != null) {
-            setState(() {
-              _selectedDate = pickedDate;
-              calendarSelectedDate = pickedDate;
-            });
+  Widget _buildCalendarButton(BuildContext context, double width) {
+    final isSelected = calendarSelectedDate != null &&
+        _isSameDay(calendarSelectedDate!, _selectedDate);
 
-            widget.onDateSelected?.call(pickedDate);
-          }
-        },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          width: widget.itemWidth,
-          height: widget.itemHeight,
-          decoration: cardDecoration(isSelected),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                LucideIcons.calendar_1,
-                size: 18,
-                color: isSelected ? Colors.white70 : Colors.grey.shade600,
+    return GestureDetector(
+      onTap: () async {
+        final pickedDate = await showDatePicker(
+          context: context,
+          initialDate: _selectedDate,
+          firstDate: DateTime(2000),
+          lastDate: DateTime(2100),
+          locale: PlatformDispatcher.instance.locale,
+        );
+
+        if (pickedDate != null) {
+          setState(() {
+            _selectedDate = pickedDate;
+            calendarSelectedDate = pickedDate;
+          });
+
+          widget.onDateSelected?.call(pickedDate);
+        }
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        //width: width,
+        constraints: BoxConstraints(minHeight: _itemMinHeight, minWidth: width),
+        decoration: cardDecoration(isSelected),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              LucideIcons.calendar_1,
+              size: 18,
+              color: isSelected ? Colors.white70 : Colors.grey.shade600,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              calendarSelectedDate?.strDayMonth() ?? AppLocalizations.of(context)!.choose,
+              maxLines: 1,
+              //overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: width < 75 ? 11 : 12,
+                fontWeight: FontWeight.w600,
+                color: isSelected ? Colors.white : Colors.black87,
               ),
-              const SizedBox(height: 4),
-              Text(
-                calendarSelectedDate?.strDayMonth() ??
-                    AppLocalizations.of(context)!.choose,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: isSelected ? Colors.white : Colors.black87,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 2),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
-  
-  // Оформление блока с выбором даты
+
   static BoxDecoration cardDecoration(bool isSelected) {
     return BoxDecoration(
       color: isSelected ? AppT.c.primary : Colors.white,
       borderRadius: BorderRadius.circular(12),
-      border: Border.all(
-        color: isSelected ? AppT.c.primary : Colors.grey.shade300,
-        width: 1,
-      ),
       boxShadow: isSelected
           ? null
           : [
@@ -202,13 +234,12 @@ class _DateSliderState extends State<DateSlider> {
   }
 }
 
-// Выделенный виджет для квадратика
 class _DateItem extends StatelessWidget {
   final DateTime date;
   final bool isSelected;
   final bool isToday;
   final double width;
-  final double height;
+  final double minHeight;
   final VoidCallback onTap;
 
   const _DateItem({
@@ -216,40 +247,80 @@ class _DateItem extends StatelessWidget {
     required this.isSelected,
     required this.isToday,
     required this.width,
-    required this.height,
+    required this.minHeight,
     required this.onTap,
   });
 
+  bool _fitsText({required BuildContext context, required String text, required TextStyle style, required double maxWidth}) {
+    final textPainter = TextPainter(
+      text: TextSpan(text: text, style: style),
+      maxLines: 1,
+      textDirection: Directionality.of(context),
+      locale: Localizations.localeOf(context),
+      textScaler: MediaQuery.textScalerOf(context),
+    )..layout(minWidth: 0, maxWidth: double.infinity);
+
+    // Небольшой запас, чтобы не получать визуальное обрезание
+    const safetyPadding = 4.0;
+
+    return textPainter.width <= (maxWidth - safetyPadding);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final weekdayFontSize = width < 72 ? 10.0 : 12.0;
+    final dateFontSize = width < 75 ? 13.0 : 16.0;
+
+    final weekdayStyle = TextStyle(
+      fontSize: weekdayFontSize,
+      color: isSelected ? Colors.white70 : Colors.grey.shade600,
+      fontWeight: FontWeight.w500,
+    );
+
+    final dateStyle = TextStyle(
+      fontSize: dateFontSize,
+      fontWeight: FontWeight.bold,
+      color: isSelected ? Colors.white : Colors.black87,
+    );
+
+    final fullDateText = date.strDayMonth();
+    final shortDateText = '${date.day}';
+
+    // padding horizontal = 4 + 4
+    final availableTextWidth = width - 8;
+
+    final dateText = _fitsText(
+      context: context,
+      text: fullDateText,
+      style: dateStyle,
+      maxWidth: availableTextWidth,
+    )
+        ? fullDateText
+        : shortDateText;
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
-        duration: Duration(milliseconds: 200),
+        duration: const Duration(milliseconds: 200),
         width: width,
-        height: height,
+        constraints: BoxConstraints(minHeight: minHeight),
         decoration: _DateSliderState.cardDecoration(isSelected),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
               date.strWeekday(),
-              style: TextStyle(
-                fontSize: 12,
-                color: isSelected ? Colors.white70 : Colors.grey.shade600,
-                fontWeight: FontWeight.w500,
-              ),
+              maxLines: 1,
+              style: weekdayStyle,
             ),
-            SizedBox(height: 4),
+            const SizedBox(height: 4),
             Text(
-              date.strDayMonth(),
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: isSelected ? Colors.white : Colors.black87,
-              ),
+              dateText,
+              maxLines: 1,
+              style: dateStyle,
             ),
-            SizedBox(height: 2),
           ],
         ),
       ),

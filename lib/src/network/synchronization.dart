@@ -1,16 +1,16 @@
 
 import 'dart:convert';
 
-import 'package:dio/dio.dart';
 import 'package:flutter/services.dart';
 import 'package:medical_assistant/src/core/extended_date_time/ext_date_time.dart';
 import 'package:medical_assistant/src/data/auth_data_manager.dart';
 import 'package:medical_assistant/src/features/cabinets/cabinets_data.dart';
+import 'package:medical_assistant/src/features/session_list/assigned_session.dart';
 import 'package:medical_assistant/src/network/kint_api.dart';
 
 class Synchronization {
   // Получение списка сеансов по API
-  static Future<List<Map<String, dynamic>>> getSessions(DateTime date) async {
+  static Future<List<AssignedSession>> getSessions(DateTime date) async {
     List<Map<String, dynamic>> cabinets = CabinetsData.getCabinets(isSelected: true).map((cabinet) => cabinet.toApiMap()).toList();
     String nowTime = date.toApiString();
     Map<String, dynamic> selection = {"НачалоПериода": nowTime, "КонецПериода": nowTime, "Кабинет": cabinets};
@@ -24,21 +24,17 @@ class Synchronization {
       session["isNoShow"] = (session["Пройдено"] as int == 0 && session["Осталось"] as int == 0);
       session["id"] = sessionId(session);
       session["ВремяС"] = DateTime.parse(session["ВремяС"]);
+
+      session["Дата"] = session["ДатаСеанса"];
+      session["Исполнитель"] = null;
+      session["фПлатная"] = session["Платная"];
     }
 
-    return list;
+    return list.map((elem) => AssignedSession.fromMap(elem)).toList();
   }
 
   static String sessionId(session) {
     return "s" +(session["ДокументНазначения"]["Идентификатор"] ?? "") + session["КодСтроки"].toString();
-  }
-
-  // Мой левак
-  Future<List<Map<String, dynamic>>> getMedicines() async {
-    Map<String, dynamic> selection = {"НачалоПериода": "2026-02-12T00:00:00", "КонецПериода": "2026-02-28T00:00:00"};
-    List<dynamic> result = await KintApi().post("Медикаменты", {}, selection);
-    var list = result.whereType<Map<String, dynamic>>().toList();
-    return list;
   }
 
   // Отметить сеанс по API
@@ -72,22 +68,20 @@ class Synchronization {
     Map<String, dynamic> report_params = json.decode(report_params_json);
     report_params["НачалоПериода"] = begin.toApiString();
     report_params["КонецПериода"] = end.toApiString();
-    report_params["Исполнитель"] = await AuthDataManager.getEmployee();
-
+    report_params["Отбор"][1]["ЗначениеОтбора"] = await AuthDataManager.getEmployee();
     List<dynamic> result = await KintApi().post("РезультатУФО", params, {"Настройки": report_params});
     var list = result.whereType<Map<String, dynamic>>().toList();
     return list;
   }
 
   // Получить сотрудника по пользователю
-  static Future<String?> getEmployee(String username) async {
+  static Future<Map<String, dynamic>> getEmployee(String username) async {
     // TODO: сделать отдельный метод api для этого
     final dataSourceParamsJson = await rootBundle.loadString('assets/get_employee.json');
     Map<String, dynamic> dataSourceParams = json.decode(dataSourceParamsJson);
     final result = await KintApi().post("ТаблицаИсточникаДанных", {}, {"ИсточникДанных": dataSourceParams, "Наименование": username, "ПреобразоватьСсылки": true});
     final firstItem = result is List && result.isNotEmpty ? result[0] : null;
     final value = firstItem is Map ? firstItem["Значение"] : null;
-    final identifier = value is Map ? value["Идентификатор"] : null;
-    return identifier;
+    return value;
   }
 }

@@ -1,15 +1,25 @@
+
+
 import 'package:flutter/material.dart';
-import 'package:medical_assistant/src/features/session_list/sessions_screen.dart';
+import 'package:flutter/services.dart';
+import 'package:medical_assistant/src/features/cabinets/cabinet.dart';
+import 'package:medical_assistant/src/features/services/service.dart';
+import 'package:medical_assistant/src/features/session_list/assigned_session.dart';
 import 'package:medical_assistant/src/features/session_list/sessions_widget_list.dart';
 import 'package:medical_assistant/ui_kit/ui_kit.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
+// TODO: вынести в отдельный файл
 class QRScanButton extends StatelessWidget {
-  final Future<List<Map<String, dynamic>>> sessions;
+  final Future<List<AssignedSession>> sessions;
+  final ValueNotifier<Cabinet?> selectedCabinet;
+  final ValueNotifier<Service?> selectedService;
 
-  const QRScanButton({
+  QRScanButton({
     super.key,
     required this.sessions,
+    required this.selectedService,
+    required this.selectedCabinet
   });
 
   @override
@@ -23,7 +33,7 @@ class QRScanButton extends StatelessWidget {
           Navigator.of(context, rootNavigator: true).push(
             MaterialPageRoute(
               fullscreenDialog: true,
-              builder: (_) => QRScanScreen(sessions: sessions),
+              builder: (_) => QRScanScreen(sessions: sessions, selectedCabinet: selectedCabinet, selectedService: selectedService,),
             ),
           );
         },
@@ -58,13 +68,18 @@ class QRScanButton extends StatelessWidget {
   }
 }
 
+// Форма отметки сканированием
 class QRScanScreen extends StatefulWidget {
-  final Future<List<Map<String, dynamic>>> sessions;
+  final Future<List<AssignedSession>> sessions;
+  final ValueNotifier<Cabinet?> selectedCabinet;
+  final ValueNotifier<Service?> selectedService;
   String? qrData;
 
   QRScanScreen({
     super.key,
     required this.sessions,
+    required this.selectedService,
+    required this.selectedCabinet
   });
 
   @override
@@ -83,6 +98,9 @@ class _QRScanScreenState extends State<QRScanScreen> {
   String? _scannedValue;
   bool _isProcessing = false;
 
+  Set<String> scanned = {};
+  int countBefore = 0; // Если количество изменилось, то издаем вибрацию.
+
   @override
   void dispose() {
     _scannerController.dispose();
@@ -99,6 +117,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
     if (value == null || value.isEmpty) return;
 
     _isProcessing = true;
+    scanned.add(value);
 
     setState(() {
       _scannedValue = value;
@@ -111,7 +130,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
     });
   }
 
-  List<Map<String, dynamic>> _filterSessions(List<Map<String, dynamic>> data) {
+  List<AssignedSession> _filterSessions(List<AssignedSession> data) {
     if (widget.qrData == null || widget.qrData!.isEmpty) {
       return []; // Нет данных qr-кода = ничего не отображаем
     }
@@ -119,11 +138,9 @@ class _QRScanScreenState extends State<QRScanScreen> {
     final qrValue = widget.qrData!.toString();
 
     return data.where((session) {
-      final medicalCardId =
-      session["МедицинскаяКарта"]?["Идентификатор"]?.toString();
+      final medicalCardId = session.medicalCard?["Идентификатор"]?.toString();
 
-      final guestCardId =
-      session["КартаГостя"]?["Идентификатор"]?.toString();
+      final guestCardId = session.guestCard?["Идентификатор"]?.toString();
 
       return medicalCardId == qrValue || guestCardId == qrValue;
     }).toList();
@@ -132,7 +149,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppT.c.background,
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.close, color: Colors.white,),
@@ -181,40 +198,25 @@ class _QRScanScreenState extends State<QRScanScreen> {
                         ),
                       ),
                     ),
-                    if (_scannedValue != null)
-                      Positioned(
-                        left: 12,
-                        right: 12,
-                        bottom: 12,
-                        child: Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.6),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            'Считано: $_scannedValue',
-                            style: const TextStyle(color: Colors.white),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ),
+                    counter(scanned.length)
                   ],
                 ),
               ),
             ),
           ),
           Expanded(
-            child: FutureBuilder<List<Map<String, dynamic>>>(
+            child: FutureBuilder<List<AssignedSession>>(
               future: widget.sessions,
               builder: (context, snapshot) {
-                final data = snapshot.data ?? <Map<String, dynamic>>[];
+                final data = snapshot.data ?? <AssignedSession>[];
                 final filteredData = _filterSessions(data);
 
                 return CustomScrollView(
                   slivers: [
-                    ...SessionsWidgetList.sessionCardWidgets(context, snapshot, filteredData, refresh)
+                    ...SessionsWidgetList.sessionCardWidgets(context, snapshot, filteredData, refresh, showCompleted: true,
+                        selectedCabinet: widget.selectedCabinet, selectedService: widget.selectedService,
+                        afterFilter: markSingleSession // Дополнительная фильтрация списка происходит внутри, поэтому делаем так
+                    )
                   ],
                 );
               },
@@ -222,6 +224,78 @@ class _QRScanScreenState extends State<QRScanScreen> {
           ),
         ],
       )
+      ),
+    );
+  }
+
+  // Автоматически выполняем отметку, если сеанс единственный
+  void markSingleSession(List<AssignedSession> data) {
+    if (data.length == 1) {
+      if (countBefore != scanned.length) {
+        vibrateShort();
+        countBefore++;
+      }
+      data[0].handleSessionAction(isCancel: false, updateState: () {});
+    }
+  }
+
+  Future<void> vibrateShort() async {
+    await HapticFeedback.heavyImpact();
+  }
+
+  // Счетчик отсканированных
+  Widget counter(int count) {
+    return Positioned(
+      right: 12,
+      bottom: 12,
+      child: TweenAnimationBuilder<double>(
+        key: ValueKey(count),
+        tween: Tween(begin: 1.12, end: 1.0),
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+        builder: (context, scale, child) {
+          return Transform.scale(
+            scale: scale,
+            child: Material(
+              color: Colors.transparent,
+              shape: const CircleBorder(),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                onTap: () {
+                  setState(() {
+                    scanned.clear(); // Очищаем количество при нажатии
+                  });
+                },
+                borderRadius: BorderRadius.circular(20),
+                child: Ink(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: AppT.c.primary,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.22),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      count.toString(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }

@@ -255,7 +255,7 @@ class _CabinetsScreen extends State<CabinetsScreen> {
   void _deselectAll() {
     final _cabinets = CabinetsData.getCabinets();
     for (var cabinet in _cabinets) {
-      if (cabinet.isSelected ?? false) {
+      if (cabinet.isSelected) {
         cabinet.isSelected = false;
         CabinetsData.save(cabinet);
       }

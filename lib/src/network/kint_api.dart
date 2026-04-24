@@ -28,9 +28,13 @@ class KintApi {
 
   // Заполнение данных авторизации и создание соединения
   void createConnectionWithAuth(AuthDataManager auth){
-    username = auth.user!;
-    password = auth.password!;
-    server = auth.publication!;
+    if (auth.publication == null) { // Эта ошибка должна выходить только у разработчиков.
+      throw "Не заполнены данные авторизации";
+    }
+
+    username = auth.user ?? "";
+    password = auth.password ?? "";
+    server = auth.publication ?? "";
     setAuth();
     createConnection();
   }

@@ -45,7 +45,8 @@ class CabinetsData {
   // Получаем список кабинетов для формы выбора кабинетов
   static Future<List<Cabinet>> getCabinetsToChoose() async {
     await Synchronization.getCabinets();
-    return await getCabinets();
+    List<Cabinet> cabinets = await getCabinets();
+    return cabinets..sort((a, b) {return a.name!.compareTo(b.name!);});
   }
 
   // Проверяем есть ли хотя бы один выбранный кабинет

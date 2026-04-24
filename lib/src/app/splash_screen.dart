@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:medical_assistant/l10n/app_localizations.dart';
+import 'package:medical_assistant/src/data/settings.dart';
 import 'package:medical_assistant/src/features/cabinets/cabinets_data.dart';
 import 'package:medical_assistant/src/features/cabinets/cabinets_screen.dart';
 import 'package:medical_assistant/src/features/login/authorization.dart';
@@ -16,11 +17,26 @@ class SplashScreen extends StatefulWidget {
 
 // Загрузка при запуске приложения. Определяем форму для открытия.
 class _SplashScreenState extends State<SplashScreen> {
-  // Кэширование нужно, чтобы при hot reload не выполнялась повторная загрузка
+  // Кэширование нужно, чтобы при hot reload не выполнялась повторная загрузка. Возможно, тут ошибка, что авторизация проверяется в initState().
   static bool? _cachedAuthState;
   late Future<bool> _authFuture;
 
   static bool? hasSelectedCabinets;
+
+  // Проверяем авторизацию, при успешной авторизации подгружаем нужные данные.
+  Future<bool> sync() async {
+    bool result = await Authorization.isAuthorized();
+
+    if (result) {
+      try {
+        await Settings.syncSettings();
+      } catch (error) {
+        LoginScreen.showMessage(error.toString(), context);
+      }
+    }
+
+    return result;
+  }
 
   @override
   void initState() {
@@ -29,7 +45,7 @@ class _SplashScreenState extends State<SplashScreen> {
     if (_cachedAuthState != null) {
       _authFuture = Future.value(_cachedAuthState);
     } else {
-      _authFuture = Authorization.isAuthorized().then((value) {
+      _authFuture = sync().then((value) {
         _cachedAuthState = value; // Сохраняем результат
         return value;
       });

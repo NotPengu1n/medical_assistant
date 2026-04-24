@@ -2,7 +2,7 @@ import 'package:hive/hive.dart';
 
 part 'directory.g.dart';
 
-@HiveType(typeId: 0)
+@HiveType(typeId: 0)  
 class Directory {
   @HiveField(0)
   String? id = "";
