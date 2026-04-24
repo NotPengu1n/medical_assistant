@@ -1,0 +1,78 @@
+{
+  "name": "base_theme",
+  "displayName": "Карта гостя",
+
+  "colors": {
+    "primary": "#006ABA",
+    "primaryVariant": "#005A9E",
+    "secondary": "#2F80ED",
+    "accent": "#00A3C4",
+
+    "background": "#F1F4F8",
+    "surface": "#FFFFFF",
+    "surfaceVariant": "#E0E3E7",
+
+    "mainActionBackground": "#4C006ABA",
+    "secondaryActionBackground": "#F1F4F8",
+
+    "textPrimary": "#14181B",
+    "textSecondary": "#57636C",
+    "textMuted": "#95A1AC",
+
+    "success": "#09e385",
+    "warning": "#F9CF58",
+    "error": "#FF5963",
+    "divider": "#E0E3E7",
+
+    "brandGradient": {
+      "start": "#006ABA",
+      "end": "#2F80ED"
+    }
+  },
+
+  "radius": {
+    "small": 8,
+    "medium": 20,
+    "large": 24,
+    "extraLarge": 32
+  },
+
+  "spacing": {
+    "xs": 4,
+    "sm": 8,
+    "md": 16,
+    "lg": 24,
+    "xl": 32
+  },
+
+  "shadows": {
+    "card": {
+      "color": "rgba(0,0,0,0.06)",
+      "blur": 16,
+      "spread": 0,
+      "offsetX": 0,
+      "offsetY": 6
+    },
+    "button": {
+      "color": "rgba(0,0,0,0.10)",
+      "blur": 20,
+      "spread": 0,
+      "offsetX": 0,
+      "offsetY": 8
+    }
+  },
+
+  "typography": {
+    "fontFamily": "Inter",
+    "scale": 1.0
+  },
+
+  "features": {
+    "useMaterial3": true
+  },
+
+  "assets": {
+    "logo": "assets/brands/base_theme/logo.png",
+    "logoDark": "assets/brands/base_theme/logo.png"
+  }
+}

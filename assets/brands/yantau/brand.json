@@ -1,0 +1,77 @@
+{
+  "name": "yantau",
+  "displayName": "Геокурорт «Янган-Тау»",
+
+  "colors": {
+    "primary": "#8A74B2",
+    "primaryVariant": "#7A64A2",
+    "secondary": "#5C5C5B",
+    "accent": "#F3911C",
+
+    "background": "#F6F7FB",
+    "surface": "#FFFFFF",
+    "surfaceVariant": "#F1F2F4",
+    "mainActionBackground": "#EEE7F8",
+    "secondaryActionBackground": "#F3F4F8",
+
+    "textPrimary": "#1A1A1A",
+    "textSecondary": "#5C5C5B",
+    "textMuted": "#A0A0A0",
+
+    "success": "#2E5628",
+    "warning": "#F3911C",
+    "error": "#E85C5C",
+    "divider": "#E0E3EB",
+
+    "brandGradient": {
+      "start": "#8A74B2",
+      "end": "#7A64A2"
+    }
+  },
+
+  "radius": {
+    "small": 8,
+    "medium": 16,
+    "large": 24,
+    "extraLarge": 36
+  },
+
+  "spacing": {
+    "xs": 4,
+    "sm": 8,
+    "md": 16,
+    "lg": 24,
+    "xl": 32
+  },
+
+  "shadows": {
+    "card": {
+      "color": "rgba(0,0,0,0.06)",
+      "blur": 12,
+      "spread": 0,
+      "offsetX": 0,
+      "offsetY": 4
+    },
+    "button": {
+      "color": "rgba(0,0,0,0.12)",
+      "blur": 16,
+      "spread": 0,
+      "offsetX": 0,
+      "offsetY": 4
+    }
+  },
+
+  "typography": {
+    "fontFamily": "ProximaNova",
+    "scale": 1.0
+  },
+
+  "features": {
+    "useMaterial3": true
+  },
+
+  "assets": {
+    "logo": "assets/brands/yantau/logo.png",
+    "logoDark": "assets/brands/yantau/logo.png"
+  }
+}

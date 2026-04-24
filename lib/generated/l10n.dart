@@ -59,6 +59,106 @@ class S {
       args: [],
     );
   }
+
+  /// `Medicines`
+  String get medicines {
+    return Intl.message(
+      'Medicines',
+      name: 'medicines',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Mark`
+  String get mark {
+    return Intl.message(
+      'Mark',
+      name: 'mark',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No-show`
+  String get noshow {
+    return Intl.message(
+      'No-show',
+      name: 'noshow',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Cancel`
+  String get cancel {
+    return Intl.message(
+      'Cancel',
+      name: 'cancel',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `QR-code`
+  String get qrcode {
+    return Intl.message(
+      'QR-code',
+      name: 'qrcode',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Sessions is empty`
+  String get emptySessions {
+    return Intl.message(
+      'Sessions is empty',
+      name: 'emptySessions',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Medicines list is empty`
+  String get emptyMedicines {
+    return Intl.message(
+      'Medicines list is empty',
+      name: 'emptyMedicines',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Error`
+  String get error {
+    return Intl.message(
+      'Error',
+      name: 'error',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Kint: Medical assistant`
+  String get appName {
+    return Intl.message(
+      'Kint: Medical assistant',
+      name: 'appName',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Choose`
+  String get choose {
+    return Intl.message(
+      'Choose',
+      name: 'choose',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

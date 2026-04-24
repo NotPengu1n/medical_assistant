@@ -1,74 +1,52 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:medical_assistant/src/features/session_list/sessions_screen.dart';
-import 'dart:ui' as ui;
-import 'package:flutter_localizations/flutter_localizations.dart';
-import 'generated/l10n.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:medical_assistant/core/branding/brand_theme_manager.dart';
+import 'package:medical_assistant/l10n/app_localizations.dart';
+import 'package:medical_assistant/src/app/app_navigation.dart';
+import 'package:medical_assistant/src/features/cabinets/cabinets_data.dart';
+import 'package:medical_assistant/src/network/kint_api_exception.dart';
+import 'package:medical_assistant/ui_kit/ui_kit.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  FlutterError.onError = errorHandler;
+
+  await Hive.initFlutter();
+
+  await CabinetsData.register();
+
+  await BrandThemeManager.instance.restoreSavedTheme();
+
+  runApp(const MedicalAssistant());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+// Обработка ошибок
+void errorHandler(dynamic error) {
+  if (error is KintApiException) {}
+}
+
+// Создание приложения
+class MedicalAssistant extends StatelessWidget {
+  const MedicalAssistant({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      localizationsDelegates: const [
-        S.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      title: S.of(context).sessions,
-      theme: ThemeData(primarySwatch: Colors.blue),
-      home: SessionsScreen(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+      locale: PlatformDispatcher.instance.locale,
+      onGenerateTitle: (context) => AppLocalizations.of(context)!.appName,
+      theme: theme(),
+      initialRoute: '/splash',
+      routes: AppNavigation.routes(),
     );
   }
-}
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: .center,
-          children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
+  ThemeData theme() {
+    return ThemeData(
+      colorScheme: ColorScheme.fromSeed(seedColor: AppT.c.primary),
+      useMaterial3: true,
+      appBarTheme: AppBarTheme(iconTheme: IconThemeData(color: AppT.c.surface),)
     );
   }
 }
